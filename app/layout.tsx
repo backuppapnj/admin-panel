@@ -1,7 +1,8 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { AppSidebar, MobileSidebar } from '@/components/app-sidebar';
+import { AppSidebar } from '@/components/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'Admin Panggilan Ghaib - PA Penajam',
@@ -16,28 +17,19 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className="h-full">
-        <div className="flex h-screen overflow-hidden bg-slate-50">
-          {/* Desktop Sidebar */}
-          <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-50">
-            <AppSidebar />
-          </div>
-
-          {/* Main Content Area */}
-          <main className="md:pl-72 flex flex-col w-full h-full">
-            {/* Mobile Header */}
-            <div className="md:hidden flex items-center p-4 border-b bg-white">
-              <MobileSidebar />
-              <h1 className="ml-4 font-bold text-lg">PA Penajam</h1>
+        <SidebarProvider>
+          <AppSidebar />
+          <main className="flex flex-col w-full h-full min-h-screen bg-slate-50">
+            <div className="flex items-center p-4 border-b bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+              <SidebarTrigger className="mr-4" />
+              <h1 className="font-bold text-lg text-slate-800">PA Penajam</h1>
             </div>
-
-            {/* Page Content */}
             <div className="flex-1 overflow-y-auto p-8">
               {children}
             </div>
           </main>
-
           <Toaster />
-        </div>
+        </SidebarProvider>
       </body>
     </html>
   );
