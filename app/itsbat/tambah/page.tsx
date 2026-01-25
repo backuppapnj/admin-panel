@@ -5,11 +5,19 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createItsbat, type ItsbatNikah } from '@/lib/api';
 import { getYearOptions } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Save, Upload } from 'lucide-react';
 
 export default function TambahItsbat() {
     const router = useRouter();
+    const { toast } = useToast();
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     const [formData, setFormData] = useState<ItsbatNikah>({
         tahun_perkara: new Date().getFullYear(),
@@ -22,9 +30,13 @@ export default function TambahItsbat() {
     });
     const [file, setFile] = useState<File | null>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleYearChange = (value: string) => {
+        setFormData(prev => ({ ...prev, tahun_perkara: parseInt(value) }));
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +48,6 @@ export default function TambahItsbat() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setMessage(null);
 
         try {
             const dataToSend = new FormData();
@@ -54,112 +65,166 @@ export default function TambahItsbat() {
             const result = await createItsbat(dataToSend);
 
             if (result.success) {
-                setMessage({ type: 'success', text: 'Data berhasil disimpan!' });
+                toast({
+                    title: "Sukses",
+                    description: "Data berhasil disimpan!",
+                });
                 setTimeout(() => router.push('/itsbat'), 1500);
             } else {
-                setMessage({ type: 'error', text: result.message || 'Gagal menyimpan data.' });
+                toast({
+                    variant: "destructive",
+                    title: "Gagal",
+                    description: result.message || 'Gagal menyimpan data.',
+                });
             }
         } catch (error) {
-            setMessage({ type: 'error', text: 'Terjadi kesalahan. Pastikan API terhubung.' });
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Terjadi kesalahan. Pastikan API terhubung.",
+            });
         }
 
         setLoading(false);
     };
 
     return (
-        <div>
-            <div className="page-header">
-                <h2>➕ Tambah Data Itsbat Nikah</h2>
-                <Link href="/itsbat" className="btn btn-secondary">
-                    ← Kembali
+        <div className="max-w-3xl mx-auto space-y-6">
+
+            <div className="flex items-center gap-4">
+                <Link href="/itsbat">
+                    <Button variant="outline" size="icon">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
                 </Link>
+                <h2 className="text-3xl font-bold tracking-tight">Tambah Data</h2>
             </div>
 
-            {message && (
-                <div className={`alert alert-${message.type}`}>
-                    {message.text}
-                </div>
-            )}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Formulir Itsbat Nikah</CardTitle>
+                    <CardDescription>Isi detail perkara dan informasi para pemohon.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-6">
 
-            <div className="card">
-                <form onSubmit={handleSubmit}>
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Tahun Perkara *</label>
-                            <select name="tahun_perkara" value={formData.tahun_perkara} onChange={handleChange} required>
-                                {getYearOptions().map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                ))}
-                            </select>
+                        {/* Informasi Perkara */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="tahun_perkara">Tahun Perkara *</Label>
+                                <Select
+                                    value={formData.tahun_perkara.toString()}
+                                    onValueChange={handleYearChange}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih Tahun" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {getYearOptions().map(year => (
+                                            <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="nomor_perkara">Nomor Perkara *</Label>
+                                <Input
+                                    id="nomor_perkara"
+                                    name="nomor_perkara"
+                                    value={formData.nomor_perkara}
+                                    onChange={handleChange}
+                                    placeholder="Contoh: 123/Pdt.P/2025/PA.Pnj"
+                                    required
+                                />
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label>Nomor Perkara *</label>
-                            <input
-                                type="text"
-                                name="nomor_perkara"
-                                value={formData.nomor_perkara}
-                                onChange={handleChange}
-                                placeholder="Contoh: 123/Pdt.P/2025/PA.Pnj"
-                                required
-                            />
+
+                        {/* Identitas Pemohon */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="pemohon_1">Pemohon I (Suami) *</Label>
+                                <Input
+                                    id="pemohon_1"
+                                    name="pemohon_1"
+                                    value={formData.pemohon_1}
+                                    onChange={handleChange}
+                                    placeholder="Nama Lengkap Suami"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="pemohon_2">Pemohon II (Istri) *</Label>
+                                <Input
+                                    id="pemohon_2"
+                                    name="pemohon_2"
+                                    value={formData.pemohon_2}
+                                    onChange={handleChange}
+                                    placeholder="Nama Lengkap Istri"
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="form-group">
-                        <label>Pemohon I (Suami) *</label>
-                        <input
-                            type="text"
-                            name="pemohon_1"
-                            value={formData.pemohon_1}
-                            onChange={handleChange}
-                            placeholder="Nama Lengkap Suami"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Pemohon II (Istri) *</label>
-                        <input
-                            type="text"
-                            name="pemohon_2"
-                            value={formData.pemohon_2}
-                            onChange={handleChange}
-                            placeholder="Nama Lengkap Istri"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Tanggal Pengumuman</label>
-                            <input type="date" name="tanggal_pengumuman" value={formData.tanggal_pengumuman} onChange={handleChange} />
+                        {/* Jadwal */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="tanggal_pengumuman">Tanggal Pengumuman</Label>
+                                <Input
+                                    type="date"
+                                    id="tanggal_pengumuman"
+                                    name="tanggal_pengumuman"
+                                    value={formData.tanggal_pengumuman || ''}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="tanggal_sidang">Tanggal Sidang *</Label>
+                                <Input
+                                    type="date"
+                                    id="tanggal_sidang"
+                                    name="tanggal_sidang"
+                                    value={formData.tanggal_sidang || ''}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
                         </div>
-                        <div className="form-group">
-                            <label>Tanggal Sidang *</label>
-                            <input type="date" name="tanggal_sidang" value={formData.tanggal_sidang} onChange={handleChange} required />
+
+                        {/* Dokumen */}
+                        <div className="space-y-2">
+                            <Label htmlFor="file_upload">Upload File (PDF/Gambar) - Optional</Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    id="file_upload"
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                    className="cursor-pointer"
+                                />
+                                <Upload className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">File akan diupload ke Google Drive. Format: PDF, DOC, Gambar. Max 5MB.</p>
                         </div>
-                    </div>
 
-                    <div className="form-group">
-                        <label>Upload File (PDF/Gambar) - Optional</label>
-                        <input
-                            type="file"
-                            onChange={handleFileChange}
-                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        />
-                        <small style={{ display: 'block', marginTop: '0.25rem', color: '#64748b' }}>
-                            File akan diupload ke Google Drive. Format: PDF, DOC, Gambar. Max 5MB.
-                        </small>
-                    </div>
+                        {/* Actions */}
+                        <div className="flex gap-4 pt-4">
+                            <Button type="submit" className="w-full md:w-auto bg-green-600 hover:bg-green-700" disabled={loading}>
+                                {loading ? (
+                                    <>Menyimpan...</>
+                                ) : (
+                                    <><Save className="mr-2 h-4 w-4" /> Simpan Data</>
+                                )}
+                            </Button>
+                            <Link href="/itsbat">
+                                <Button variant="secondary" type="button" className="w-full md:w-auto">Batal</Button>
+                            </Link>
+                        </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                        <button type="submit" className="btn btn-success" disabled={loading}>
-                            {loading ? 'Menyimpan...' : '💾 Simpan Data'}
-                        </button>
-                        <Link href="/itsbat" className="btn btn-secondary">Batal</Link>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </CardContent>
+            </Card>
+
         </div>
     );
 }

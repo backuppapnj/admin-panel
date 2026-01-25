@@ -5,11 +5,20 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createPanggilan, type Panggilan } from '@/lib/api';
 import { getYearOptions } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Save, Upload } from 'lucide-react';
 
 export default function TambahPanggilan() {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [formData, setFormData] = useState<Panggilan>({
     tahun_perkara: new Date().getFullYear(),
@@ -26,9 +35,13 @@ export default function TambahPanggilan() {
   });
   const [file, setFile] = useState<File | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleYearChange = (value: string) => {
+    setFormData(prev => ({ ...prev, tahun_perkara: parseInt(value) }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +53,6 @@ export default function TambahPanggilan() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
     try {
       const dataToSend = new FormData();
@@ -62,139 +74,208 @@ export default function TambahPanggilan() {
       const result = await createPanggilan(dataToSend);
 
       if (result.success) {
-        setMessage({ type: 'success', text: 'Data berhasil disimpan!' });
+        toast({
+          title: "Sukses",
+          description: "Data berhasil disimpan!",
+        });
         setTimeout(() => router.push('/panggilan'), 1500);
       } else {
-        setMessage({ type: 'error', text: result.message || 'Gagal menyimpan data.' });
+        toast({
+          variant: "destructive",
+          title: "Gagal",
+          description: result.message || 'Gagal menyimpan data.',
+        });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Terjadi kesalahan. Pastikan API terhubung.' });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Terjadi kesalahan. Pastikan API terhubung.",
+      });
     }
 
     setLoading(false);
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <h2>➕ Tambah Data Panggilan</h2>
-        <Link href="/panggilan" className="btn btn-secondary">
-          ← Kembali
+    <div className="max-w-3xl mx-auto space-y-6">
+
+      <div className="flex items-center gap-4">
+        <Link href="/panggilan">
+          <Button variant="outline" size="icon">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
         </Link>
+        <h2 className="text-3xl font-bold tracking-tight">Tambah Data</h2>
       </div>
 
-      {message && (
-        <div className={`alert alert-${message.type}`}>
-          {message.text}
-        </div>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Formulir Panggilan Ghaib</CardTitle>
+          <CardDescription>Isi detail perkara dan informasi pihak yang dipanggil.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
 
-      <div className="card">
-        <form onSubmit={handleSubmit}>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Tahun Perkara *</label>
-              <select name="tahun_perkara" value={formData.tahun_perkara} onChange={handleChange} required>
-                {getYearOptions().map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+            {/* Informasi Perkara */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tahun_perkara">Tahun Perkara *</Label>
+                <Select
+                  value={formData.tahun_perkara.toString()}
+                  onValueChange={handleYearChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Tahun" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getYearOptions().map(year => (
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nomor_perkara">Nomor Perkara *</Label>
+                <Input
+                  id="nomor_perkara"
+                  name="nomor_perkara"
+                  value={formData.nomor_perkara}
+                  onChange={handleChange}
+                  placeholder="Contoh: 22/Pdt.G/2025/PA.pnj"
+                  required
+                />
+              </div>
             </div>
-            <div className="form-group">
-              <label>Nomor Perkara *</label>
-              <input
-                type="text"
-                name="nomor_perkara"
-                value={formData.nomor_perkara}
+
+            {/* Identitas Pihak */}
+            <div className="space-y-2">
+              <Label htmlFor="nama_dipanggil">Nama Yang Dipanggil *</Label>
+              <Input
+                id="nama_dipanggil"
+                name="nama_dipanggil"
+                value={formData.nama_dipanggil}
                 onChange={handleChange}
-                placeholder="Contoh: 22/Pdt.G/2025/PA.pnj"
+                placeholder="Nama lengkap pihak"
                 required
               />
             </div>
-          </div>
 
-          <div className="form-group">
-            <label>Nama Yang Dipanggil *</label>
-            <input
-              type="text"
-              name="nama_dipanggil"
-              value={formData.nama_dipanggil}
-              onChange={handleChange}
-              placeholder="Nama lengkap pihak yang dipanggil"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Alamat Asal</label>
-            <textarea
-              name="alamat_asal"
-              value={formData.alamat_asal}
-              onChange={handleChange}
-              placeholder="Alamat lengkap"
-              rows={2}
-            />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Tanggal Panggilan I</label>
-              <input type="date" name="panggilan_1" value={formData.panggilan_1} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label>Tanggal Panggilan II</label>
-              <input type="date" name="panggilan_2" value={formData.panggilan_2} onChange={handleChange} />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Tanggal Panggilan Ikrar</label>
-              <input type="date" name="panggilan_ikrar" value={formData.panggilan_ikrar} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label>Tanggal Sidang</label>
-              <input type="date" name="tanggal_sidang" value={formData.tanggal_sidang} onChange={handleChange} />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>PIP</label>
-              <input type="text" name="pip" value={formData.pip} onChange={handleChange} placeholder="PIP" />
-            </div>
-            <div className="form-group">
-              <label>Upload Surat Panggilan</label>
-              <input
-                type="file"
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            <div className="space-y-2">
+              <Label htmlFor="alamat_asal">Alamat Asal</Label>
+              <Textarea
+                id="alamat_asal"
+                name="alamat_asal"
+                value={formData.alamat_asal}
+                onChange={handleChange}
+                placeholder="Alamat lengkap pihak ghaib"
+                rows={3}
               />
-              <small style={{ display: 'block', marginTop: '0.25rem', color: '#64748b' }}>
-                Format: PDF, DOC, Gambar. Max 5MB.
-              </small>
             </div>
-          </div>
 
-          <div className="form-group">
-            <label>Keterangan</label>
-            <textarea
-              name="keterangan"
-              value={formData.keterangan}
-              onChange={handleChange}
-              placeholder="Keterangan tambahan (opsional)"
-              rows={2}
-            />
-          </div>
+            {/* Jadwal Sidang */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="panggilan_1">Tanggal Panggilan I</Label>
+                <Input
+                  type="date"
+                  id="panggilan_1"
+                  name="panggilan_1"
+                  value={formData.panggilan_1}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="panggilan_2">Tanggal Panggilan II</Label>
+                <Input
+                  type="date"
+                  id="panggilan_2"
+                  name="panggilan_2"
+                  value={formData.panggilan_2}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="panggilan_ikrar">Tanggal Panggilan Ikrar</Label>
+                <Input
+                  type="date"
+                  id="panggilan_ikrar"
+                  name="panggilan_ikrar"
+                  value={formData.panggilan_ikrar}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tanggal_sidang">Tanggal Sidang</Label>
+                <Input
+                  type="date"
+                  id="tanggal_sidang"
+                  name="tanggal_sidang"
+                  value={formData.tanggal_sidang}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
 
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-            <button type="submit" className="btn btn-success" disabled={loading}>
-              {loading ? 'Menyimpan...' : '💾 Simpan Data'}
-            </button>
-            <Link href="/panggilan" className="btn btn-secondary">Batal</Link>
-          </div>
-        </form>
-      </div>
+            {/* Dokumen & Lainnya */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="pip">PIP</Label>
+                <Input
+                  id="pip"
+                  name="pip"
+                  value={formData.pip}
+                  onChange={handleChange}
+                  placeholder="Petugas informasi"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="file_upload">Upload Surat Panggilan</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="file_upload"
+                    type="file"
+                    onChange={handleFileChange}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    className="cursor-pointer"
+                  />
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground">Format: PDF, DOC, JPG. Max 5MB.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="keterangan">Keterangan Tambahan</Label>
+              <Textarea
+                id="keterangan"
+                name="keterangan"
+                value={formData.keterangan}
+                onChange={handleChange}
+                placeholder="Informasi tambahan lain jika ada"
+                rows={2}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" className="w-full md:w-auto bg-green-600 hover:bg-green-700" disabled={loading}>
+                {loading ? (
+                  <>Menyimpan...</>
+                ) : (
+                  <><Save className="mr-2 h-4 w-4" /> Simpan Data</>
+                )}
+              </Button>
+              <Link href="/panggilan">
+                <Button variant="secondary" type="button" className="w-full md:w-auto">Batal</Button>
+              </Link>
+            </div>
+
+          </form>
+        </CardContent>
+      </Card>
+
     </div>
   );
 }

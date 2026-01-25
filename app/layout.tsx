@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { AppSidebar, MobileSidebar } from '@/components/app-sidebar';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Admin Panggilan Ghaib - PA Penajam',
@@ -14,39 +15,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body>
-        <div className="layout">
-          {/* Sidebar */}
-          <aside className="sidebar">
-            <h1>🏛️ PA Penajam</h1>
-            <p className="subtitle">Admin Panel</p>
+      <body className="h-full">
+        <div className="flex h-screen overflow-hidden bg-slate-50">
+          {/* Desktop Sidebar */}
+          <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-50">
+            <AppSidebar />
+          </div>
 
-            <nav>
-              <ul className="nav-menu">
-                <li>
-                  <Link href="/">📊 Dashboard</Link>
-                </li>
-                <li>
-                  <Link href="/panggilan">📋 Panggilan Ghaib</Link>
-                </li>
-                <li>
-                  <Link href="/panggilan/tambah">➕ Tambah Data</Link>
-                </li>
-                <br />
-                <li style={{ borderTop: '1px solid #ffffff33', paddingTop: '10px' }}>
-                  <Link href="/itsbat">📋 Data Itsbat</Link>
-                </li>
-                <li>
-                  <Link href="/itsbat/tambah">➕ Tambah Itsbat</Link>
-                </li>
-              </ul>
-            </nav>
-          </aside>
+          {/* Main Content Area */}
+          <main className="md:pl-72 flex flex-col w-full h-full">
+            {/* Mobile Header */}
+            <div className="md:hidden flex items-center p-4 border-b bg-white">
+              <MobileSidebar />
+              <h1 className="ml-4 font-bold text-lg">PA Penajam</h1>
+            </div>
 
-          {/* Main Content */}
-          <main className="main-content">
-            {children}
+            {/* Page Content */}
+            <div className="flex-1 overflow-y-auto p-8">
+              {children}
+            </div>
           </main>
+
+          <Toaster />
         </div>
       </body>
     </html>
