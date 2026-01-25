@@ -50,6 +50,12 @@ const routes = [
         href: '/itsbat',
         color: 'text-pink-700',
     },
+    {
+        label: 'Panggilan e-Court',
+        icon: Gavel,
+        href: '/panggilan-ecourt',
+        color: 'text-emerald-500',
+    },
 ];
 
 export function AppSidebar() {

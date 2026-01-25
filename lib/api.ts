@@ -171,3 +171,79 @@ export async function deleteItsbat(id: number): Promise<ApiResponse<null>> {
   });
   return response.json();
 }
+
+// ==========================================
+// API PANGGILAN E-COURT
+// ==========================================
+
+export interface PanggilanEcourt {
+  id?: number;
+  tahun_perkara: number;
+  nomor_perkara: string;
+  nama_dipanggil: string;
+  alamat_asal?: string;
+  panggilan_1?: string;
+  panggilan_2?: string;
+  panggilan_3?: string;
+  panggilan_ikrar?: string;
+  tanggal_sidang?: string;
+  pip?: string;
+  link_surat?: string;
+  keterangan?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// GET - Ambil semua data
+export async function getAllPanggilanEcourt(tahun?: number, page = 1): Promise<ApiResponse<PanggilanEcourt[]>> {
+  let url = `${API_URL}/panggilan-ecourt?page=${page}`;
+  if (tahun) {
+    url += `&tahun=${tahun}`;
+  }
+  const response = await fetch(url, { cache: 'no-store' });
+  return response.json();
+}
+
+// GET - Ambil satu data
+export async function getPanggilanEcourt(id: number): Promise<PanggilanEcourt | null> {
+  const response = await fetch(`${API_URL}/panggilan-ecourt/${id}`);
+  const result: ApiResponse<PanggilanEcourt> = await response.json();
+  return result.data || null;
+}
+
+// POST - Tambah data baru
+export async function createPanggilanEcourt(data: PanggilanEcourt | FormData): Promise<ApiResponse<PanggilanEcourt>> {
+  const isFormData = data instanceof FormData;
+  const response = await fetch(`${API_URL}/panggilan-ecourt`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return response.json();
+}
+
+// PUT - Update data
+export async function updatePanggilanEcourt(id: number, data: PanggilanEcourt | FormData): Promise<ApiResponse<PanggilanEcourt>> {
+  const isFormData = data instanceof FormData;
+
+  const method = isFormData ? 'POST' : 'PUT';
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+
+  const response = await fetch(`${API_URL}/panggilan-ecourt/${id}`, {
+    method: method,
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return response.json();
+}
+
+// DELETE - Hapus data
+export async function deletePanggilanEcourt(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/panggilan-ecourt/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return response.json();
+}
