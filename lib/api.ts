@@ -32,6 +32,14 @@ export interface ItsbatNikah {
   updated_at?: string;
 }
 
+export interface AgendaPimpinan {
+  id?: number;
+  tanggal_agenda: string;
+  isi_agenda: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -41,6 +49,31 @@ interface ApiResponse<T> {
   last_page?: number;
   per_page?: number;
 }
+
+const normalizeApiResponse = async <T>(response: Response): Promise<ApiResponse<T>> => {
+  const json = await response.json().catch(() => ({}));
+
+  // Our APIs mostly use { success: boolean, ... }
+  if (typeof json?.success === 'boolean') {
+    return json as ApiResponse<T>;
+  }
+
+  // Agenda API currently uses { status: 'success' | 'error', ... }
+  if (typeof json?.status === 'string') {
+    const ok = json.status === 'success';
+    return {
+      success: ok,
+      data: json.data as T | undefined,
+      message: json.message,
+    };
+  }
+
+  return {
+    success: response.ok,
+    data: json?.data as T | undefined,
+    message: json?.message,
+  };
+};
 
 // Headers dengan API Key
 const getHeaders = (isFormData = false) => {
@@ -246,4 +279,50 @@ export async function deletePanggilanEcourt(id: number): Promise<ApiResponse<nul
     headers: getHeaders(),
   });
   return response.json();
+}
+
+// ==========================================
+// API AGENDA PIMPINAN
+// ==========================================
+
+export async function getAllAgenda(tahun?: number, bulan?: string): Promise<ApiResponse<AgendaPimpinan[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  if (bulan) qs.push(`bulan=${encodeURIComponent(bulan)}`);
+  const url = qs.length ? `${API_URL}/agenda?${qs.join('&')}` : `${API_URL}/agenda`;
+
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<AgendaPimpinan[]>(response);
+}
+
+export async function getAgenda(id: number): Promise<AgendaPimpinan | null> {
+  const response = await fetch(`${API_URL}/agenda/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<AgendaPimpinan>(response);
+  return result.data || null;
+}
+
+export async function createAgenda(data: AgendaPimpinan): Promise<ApiResponse<AgendaPimpinan>> {
+  const response = await fetch(`${API_URL}/agenda`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<AgendaPimpinan>(response);
+}
+
+export async function updateAgenda(id: number, data: Partial<AgendaPimpinan>): Promise<ApiResponse<AgendaPimpinan>> {
+  const response = await fetch(`${API_URL}/agenda/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<AgendaPimpinan>(response);
+}
+
+export async function deleteAgenda(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/agenda/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
 }

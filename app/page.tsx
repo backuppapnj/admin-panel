@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Globe } from "@/components/ui/globe";
-import { ArrowRight, Megaphone, Gavel, PlusCircle, Calendar, Users, FileText, BarChart3 } from 'lucide-react';
+import { ArrowRight, Megaphone, Gavel, PlusCircle, Calendar, CalendarDays, FileText } from 'lucide-react';
 import { BlurFade } from "@/components/ui/blur-fade";
 
 export default function Dashboard() {
@@ -32,9 +32,9 @@ export default function Dashboard() {
               <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
                 Dashboard Admin
               </h1>
-              <p className="text-muted-foreground text-lg max-w-2xl">
-                Selamat datang di Panel Admin Pengadilan Agama Penajam. Kelola data Panggilan Ghaib dan Itsbat Nikah dengan mudah dan cepat.
-              </p>
+                <p className="text-muted-foreground text-lg max-w-2xl">
+                  Selamat datang di Panel Admin Pengadilan Agama Penajam. Kelola data Panggilan, Itsbat Nikah, Panggilan e-Court, dan Agenda Pimpinan.
+                </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-white/50 backdrop-blur-sm border px-4 py-2 rounded-full shadow-sm">
               <Calendar className="h-4 w-4" />
@@ -130,6 +130,71 @@ export default function Dashboard() {
                     <span>Gunakan filter tahun untuk mencari data arsip lama.</span>
                   </li>
                 </ul>
+              </CardContent>
+            </Card>
+          </BlurFade>
+
+        </div>
+
+        {/* Agenda + eCourt row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Panggilan e-Court Card */}
+          <BlurFade delay={0.5} inView>
+            <Card className="hover:shadow-xl transition-all duration-300 border-t-4 border-t-emerald-500 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Gavel className="h-5 w-5 text-emerald-500" />
+                  Panggilan e-Court
+                </CardTitle>
+                <CardDescription>Kelola panggilan e-Court.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground mb-6">
+                  Manajemen data panggilan/pemberitahuan melalui e-Court.
+                </div>
+                <div className="flex gap-3">
+                  <Link href="/panggilan-ecourt" className="w-full">
+                    <Button variant="outline" className="w-full group">
+                      Lihat Data <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                  <Link href="/panggilan-ecourt/tambah" className="w-full">
+                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Baru
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </BlurFade>
+
+          {/* Agenda Pimpinan Card */}
+          <BlurFade delay={0.6} inView>
+            <Card className="hover:shadow-xl transition-all duration-300 border-t-4 border-t-red-600 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-red-600" />
+                  Agenda Pimpinan
+                </CardTitle>
+                <CardDescription>Kelola agenda pimpinan.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground mb-6">
+                  Data agenda untuk ditampilkan di website (sidebar + halaman agenda).
+                </div>
+                <div className="flex gap-3">
+                  <Link href="/agenda" className="w-full">
+                    <Button variant="outline" className="w-full group">
+                      Lihat Data <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                  <Link href="/agenda/tambah" className="w-full">
+                    <Button className="w-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Baru
+                    </Button>
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           </BlurFade>

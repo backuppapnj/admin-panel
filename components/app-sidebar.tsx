@@ -6,6 +6,7 @@ import {
     LayoutDashboard,
     Megaphone,
     Gavel,
+    CalendarDays,
     LogOut,
     ChevronUp,
     User2
@@ -55,6 +56,12 @@ const routes = [
         icon: Gavel,
         href: '/panggilan-ecourt',
         color: 'text-emerald-500',
+    },
+    {
+        label: 'Agenda Pimpinan',
+        icon: CalendarDays,
+        href: '/agenda',
+        color: 'text-red-500',
     },
 ];
 
