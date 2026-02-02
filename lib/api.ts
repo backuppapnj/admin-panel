@@ -326,3 +326,62 @@ export async function deleteAgenda(id: number): Promise<ApiResponse<null>> {
   });
   return normalizeApiResponse<null>(response);
 }
+
+// ==========================================
+// API LHKPN
+// ==========================================
+
+export interface LhkpnReport {
+  id?: number;
+  nip: string;
+  nama: string;
+  jabatan: string;
+  tahun: number;
+  jenis_laporan: 'LHKPN' | 'SPT Tahunan';
+  tanggal_lapor?: string;
+  link_tanda_terima?: string; // URL
+  link_dokumen_pendukung?: string; // URL
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllLhkpn(tahun?: number): Promise<ApiResponse<LhkpnReport[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  const url = qs.length ? `${API_URL}/lhkpn?${qs.join('&')}` : `${API_URL}/lhkpn`;
+
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<LhkpnReport[]>(response);
+}
+
+export async function getLhkpn(id: number): Promise<LhkpnReport | null> {
+  const response = await fetch(`${API_URL}/lhkpn/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<LhkpnReport>(response);
+  return result.data || null;
+}
+
+export async function createLhkpn(data: LhkpnReport): Promise<ApiResponse<LhkpnReport>> {
+  const response = await fetch(`${API_URL}/lhkpn`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<LhkpnReport>(response);
+}
+
+export async function updateLhkpn(id: number, data: Partial<LhkpnReport>): Promise<ApiResponse<LhkpnReport>> {
+  const response = await fetch(`${API_URL}/lhkpn/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<LhkpnReport>(response);
+}
+
+export async function deleteLhkpn(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/lhkpn/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}

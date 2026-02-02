@@ -32,9 +32,9 @@ export default function Dashboard() {
               <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
                 Dashboard Admin
               </h1>
-                <p className="text-muted-foreground text-lg max-w-2xl">
-                  Selamat datang di Panel Admin Pengadilan Agama Penajam. Kelola data Panggilan, Itsbat Nikah, Panggilan e-Court, dan Agenda Pimpinan.
-                </p>
+              <p className="text-muted-foreground text-lg max-w-2xl">
+                Selamat datang di Panel Admin Pengadilan Agama Penajam. Kelola data Panggilan, Itsbat Nikah, Panggilan e-Court, dan Agenda Pimpinan.
+              </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-white/50 backdrop-blur-sm border px-4 py-2 rounded-full shadow-sm">
               <Calendar className="h-4 w-4" />
@@ -191,6 +191,36 @@ export default function Dashboard() {
                   </Link>
                   <Link href="/agenda/tambah" className="w-full">
                     <Button className="w-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Baru
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </BlurFade>
+
+          {/* LHKPN Card */}
+          <BlurFade delay={0.7} inView>
+            <Card className="hover:shadow-xl transition-all duration-300 border-t-4 border-t-amber-500 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-amber-500" />
+                  LHKPN & SPT
+                </CardTitle>
+                <CardDescription>Laporan Harta Kekayaan & Pajak.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm text-muted-foreground mb-6">
+                  Kelola data pelaporan LHKPN dan SPT Tahunan Pegawai.
+                </div>
+                <div className="flex gap-3">
+                  <Link href="/lhkpn" className="w-full">
+                    <Button variant="outline" className="w-full group">
+                      Lihat Data <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </Link>
+                  <Link href="/lhkpn/tambah" className="w-full">
+                    <Button className="w-full bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-200">
                       <PlusCircle className="mr-2 h-4 w-4" /> Baru
                     </Button>
                   </Link>
