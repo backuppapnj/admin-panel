@@ -341,6 +341,8 @@ export interface LhkpnReport {
   jenis_laporan: 'LHKPN' | 'SPT Tahunan';
   tanggal_lapor?: string;
   link_tanda_terima?: string; // URL
+  link_pengumuman?: string; // URL
+  link_spt?: string; // URL
   link_dokumen_pendukung?: string; // URL
   created_at?: string;
   updated_at?: string;
