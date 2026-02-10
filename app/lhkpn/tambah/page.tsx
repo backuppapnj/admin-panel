@@ -8,11 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Loader2, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from "@/components/ui/blur-fade";
 
@@ -26,12 +24,7 @@ export default function LhkpnAdd() {
         tanggal_lapor: new Date().toISOString().split('T')[0],
     });
 
-    const [files, setFiles] = useState<Record<string, File | null>>({
-        file_tanda_terima: null,
-        file_pengumuman: null,
-        file_spt: null,
-        file_dokumen_pendukung: null,
-    });
+    const [files, setFiles] = useState<Record<string, File | null>>({});
 
     const handlePegawaiChange = (value: string) => {
         const selectedPegawai = pegawaiData.find(p => p.id.toString() === value || p.nip === value);
@@ -45,45 +38,26 @@ export default function LhkpnAdd() {
         }
     };
 
-    const handleFileChange = (field: string, file: File | null) => {
-        setFiles(prev => ({ ...prev, [field]: file }));
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.nip) {
-            toast({ title: "Error", description: "Silakan pilih pegawai", variant: "destructive" });
+            toast({ title: "Error", description: "Pilih pegawai", variant: "destructive" });
             return;
         }
 
         setLoading(true);
         try {
             const dataToSend = new FormData();
-            dataToSend.append('nip', formData.nip || '');
-            dataToSend.append('nama', formData.nama || '');
-            dataToSend.append('jabatan', formData.jabatan || '');
-            dataToSend.append('tahun', String(formData.tahun || new Date().getFullYear()));
-            dataToSend.append('jenis_laporan', formData.jenis_laporan || 'LHKPN');
-            dataToSend.append('tanggal_lapor', formData.tanggal_lapor || '');
-
-            if (formData.link_tanda_terima) dataToSend.append('link_tanda_terima', formData.link_tanda_terima);
-            if (formData.link_pengumuman) dataToSend.append('link_pengumuman', formData.link_pengumuman);
-            if (formData.link_spt) dataToSend.append('link_spt', formData.link_spt);
-            if (formData.link_dokumen_pendukung) dataToSend.append('link_dokumen_pendukung', formData.link_dokumen_pendukung);
-
-            Object.entries(files).forEach(([key, file]) => {
-                if (file) dataToSend.append(key, file);
-            });
+            Object.entries(formData).forEach(([key, val]) => dataToSend.append(key, String(val)));
+            Object.entries(files).forEach(([key, file]) => { if (file) dataToSend.append(key, file); });
 
             const result = await createLhkpn(dataToSend);
             if (result.success) {
-                toast({ title: "Sukses", description: "Data laporan berhasil disimpan!" });
+                toast({ title: "Sukses", description: "Laporan berhasil disimpan!" });
                 router.push('/lhkpn');
-            } else {
-                throw new Error(result.message || 'Gagal menyimpan');
             }
         } catch (error) {
-            toast({ variant: "destructive", title: "Gagal", description: "Terjadi kesalahan saat menyimpan data." });
+            toast({ variant: "destructive", title: "Gagal", description: "Terjadi kesalahan" });
         }
         setLoading(false);
     };
@@ -101,7 +75,7 @@ export default function LhkpnAdd() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Formulir Pelaporan</CardTitle>
-                        <CardDescription>Isi data pelaporan Harta Kekayaan atau SPT Tahunan.</CardDescription>
+                        <CardDescription>Pilih jenis laporan sesuai jabatan (LHKPN untuk Pejabat, LHKASN untuk Pegawai).</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -118,15 +92,15 @@ export default function LhkpnAdd() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Tahun</Label>
-                                    <Input type="number" value={formData.tahun} onChange={e => setFormData(prev => ({ ...prev, tahun: parseInt(e.target.value) }))} min="2019" max="2030" />
+                                    <Input type="number" value={formData.tahun} onChange={e => setFormData(prev => ({ ...prev, tahun: parseInt(e.target.value) }))} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Jenis Laporan</Label>
                                     <Select value={formData.jenis_laporan} onValueChange={(val: any) => setFormData(prev => ({ ...prev, jenis_laporan: val }))}>
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="LHKPN">LHKPN (Pejabat)</SelectItem>
-                                            <SelectItem value="SPT Tahunan">SPT Tahunan (ASN)</SelectItem>
+                                            <SelectItem value="LHKPN">LHKPN (Penyelenggara Negara)</SelectItem>
+                                            <SelectItem value="LHKASN">LHKASN (Pegawai ASN)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -137,30 +111,42 @@ export default function LhkpnAdd() {
                                 <Input type="date" value={formData.tanggal_lapor} onChange={e => setFormData(prev => ({ ...prev, tanggal_lapor: e.target.value }))} />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-                                <div className="space-y-2">
-                                    <Label>File Tanda Terima</Label>
-                                    <Input type="file" onChange={e => handleFileChange('file_tanda_terima', e.target.files?.[0] || null)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>File Pengumuman (KPK)</Label>
-                                    <Input type="file" onChange={e => handleFileChange('file_pengumuman', e.target.files?.[0] || null)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>File SPT</Label>
-                                    <Input type="file" onChange={e => handleFileChange('file_spt', e.target.files?.[0] || null)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>File Lainnya</Label>
-                                    <Input type="file" onChange={e => handleFileChange('file_dokumen_pendukung', e.target.files?.[0] || null)} />
-                                </div>
+                            <div className="border-t pt-4 space-y-4">
+                                <Label className="text-blue-700 font-bold flex items-center gap-2">
+                                    <Info className="h-4 w-4" /> Dokumen Bukti
+                                </Label>
+                                
+                                {formData.jenis_laporan === 'LHKPN' ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                        <div className="space-y-2">
+                                            <Label>File Tanda Terima LHKPN</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_tanda_terima: e.target.files?.[0] || null }))} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>File Pengumuman LHKPN</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_pengumuman: e.target.files?.[0] || null }))} />
+                                        </div>
+                                        <div className="space-y-2 md:col-span-2">
+                                            <Label>File SPT Tahunan (Bukti Pajak)</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_spt: e.target.files?.[0] || null }))} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
+                                        <div className="space-y-2">
+                                            <Label>File Bukti Pelaporan (SPT Tahunan)</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_spt: e.target.files?.[0] || null }))} />
+                                            <p className="text-[10px] text-emerald-700 font-medium italic">* Bagi ASN, laporan SPT dianggap sebagai pemenuhan LHKASN.</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="pt-4 flex justify-end gap-2">
                                 <Link href="/lhkpn"><Button type="button" variant="outline">Batal</Button></Link>
                                 <Button type="submit" className="bg-violet-600 hover:bg-violet-700" disabled={loading}>
                                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                    Simpan Data
+                                    Simpan Laporan
                                 </Button>
                             </div>
                         </form>
