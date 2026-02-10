@@ -199,7 +199,7 @@ export default function AgendaList() {
                   ) : (
                     data.map((item, idx) => (
                       <TableRow key={item.id}>
-                        <TableCell className="text-center">{(pagination.current_page - 1) * 10 + idx + 1}</TableCell>
+                        <TableCell className="text-center">{(pagination.current_page - 1) * 5 + idx + 1}</TableCell>
                         <TableCell className="font-medium">{formatTanggalISO(item.tanggal_agenda)}</TableCell>
                         <TableCell className="text-muted-foreground">{truncateText(item.isi_agenda)}</TableCell>
                         <TableCell className="text-right">
