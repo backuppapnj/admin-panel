@@ -12,7 +12,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Loader2, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from "@/components/ui/blur-fade";
 
@@ -41,6 +41,7 @@ export default function AnggaranAdd() {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [paguList, setPaguList] = useState<PaguAnggaran[]>([]);
+    const [fileDokumen, setFileDokumen] = useState<File | null>(null);
     
     const [formData, setFormData] = useState<Partial<RealisasiAnggaran>>({
         dipa: 'DIPA 01',
@@ -54,7 +55,6 @@ export default function AnggaranAdd() {
 
     const [currentPagu, setCurrentPagu] = useState<number>(0);
 
-    // Load Pagu Config
     useEffect(() => {
         const loadPagu = async () => {
             const res = await getAllPagu(formData.tahun);
@@ -63,7 +63,6 @@ export default function AnggaranAdd() {
         loadPagu();
     }, [formData.tahun]);
 
-    // Update Current Pagu based on selection
     useEffect(() => {
         const pagu = paguList.find(p => p.dipa === formData.dipa && p.kategori === formData.kategori);
         setCurrentPagu(pagu ? pagu.jumlah_pagu : 0);
@@ -78,7 +77,22 @@ export default function AnggaranAdd() {
 
         setLoading(true);
         try {
-            const result = await createAnggaran(formData as RealisasiAnggaran);
+            const dataToSend = new FormData();
+            Object.entries(formData).forEach(([key, val]) => {
+                if (val !== undefined && val !== null) dataToSend.append(key, String(val));
+            });
+            if (fileDokumen) dataToSend.append('file_dokumen', fileDokumen);
+
+            // Karena kita mengirim FormData, kita buat fungsi khusus fetch di sini atau update api.ts
+            // Untuk kesederhanaan sementara, kita asumsikan api.ts bisa handle FormData
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/anggaran`, {
+                method: 'POST',
+                headers: { 'X-API-Key': process.env.NEXT_PUBLIC_API_KEY || '' },
+                body: dataToSend,
+            });
+            
+            const result = await response.json();
+
             if (result.success) {
                 toast({ title: "Sukses", description: "Data realisasi berhasil disimpan!" });
                 router.push('/anggaran');
@@ -101,9 +115,7 @@ export default function AnggaranAdd() {
         <div className="max-w-2xl mx-auto space-y-6">
             <BlurFade delay={0.1} inView>
                 <div className="flex items-center gap-4">
-                    <Link href="/anggaran">
-                        <Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
-                    </Link>
+                    <Link href="/anggaran"><Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
                     <h2 className="text-2xl font-bold tracking-tight">Input Realisasi Bulanan</h2>
                 </div>
             </BlurFade>
@@ -112,25 +124,18 @@ export default function AnggaranAdd() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Formulir Realisasi</CardTitle>
-                        <CardDescription>Pagu anggaran akan diambil otomatis dari konfigurasi.</CardDescription>
+                        <CardDescription>Unggah bukti dokumen untuk meningkatkan transparansi.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Tahun</Label>
-                                    <Input 
-                                        type="number" 
-                                        value={formData.tahun} 
-                                        onChange={e => setFormData(prev => ({ ...prev, tahun: parseInt(e.target.value) }))}
-                                    />
+                                    <Input type="number" value={formData.tahun} onChange={e => setFormData(prev => ({ ...prev, tahun: parseInt(e.target.value) }))} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Bulan</Label>
-                                    <Select 
-                                        value={formData.bulan?.toString()} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, bulan: parseInt(val) }))}
-                                    >
+                                    <Select value={formData.bulan?.toString()} onValueChange={(val) => setFormData(prev => ({ ...prev, bulan: parseInt(val) }))}>
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             {BULAN_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
@@ -142,23 +147,14 @@ export default function AnggaranAdd() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>DIPA</Label>
-                                    <Select 
-                                        value={formData.dipa} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, dipa: val, kategori: '' }))}
-                                    >
+                                    <Select value={formData.dipa} onValueChange={(val) => setFormData(prev => ({ ...prev, dipa: val, kategori: '' }))}>
                                         <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="DIPA 01">DIPA 01</SelectItem>
-                                            <SelectItem value="DIPA 04">DIPA 04</SelectItem>
-                                        </SelectContent>
+                                        <SelectContent><SelectItem value="DIPA 01">DIPA 01</SelectItem><SelectItem value="DIPA 04">DIPA 04</SelectItem></SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Kategori Belanja</Label>
-                                    <Select 
-                                        value={formData.kategori} 
-                                        onValueChange={(val) => setFormData(prev => ({ ...prev, kategori: val }))}
-                                    >
+                                    <Select value={formData.kategori} onValueChange={(val) => setFormData(prev => ({ ...prev, kategori: val }))}>
                                         <SelectTrigger><SelectValue placeholder="Pilih..." /></SelectTrigger>
                                         <SelectContent>
                                             {KATEGORI_BY_DIPA[formData.dipa || 'DIPA 01'].map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
@@ -167,43 +163,35 @@ export default function AnggaranAdd() {
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
-                                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-                                <div>
-                                    <p className="text-xs text-blue-700 font-semibold uppercase tracking-wider">Pagu Terkonfigurasi</p>
-                                    <p className="text-lg font-bold text-blue-900">{formatCurrency(currentPagu)}</p>
-                                    {currentPagu === 0 && (
-                                        <p className="text-[10px] text-red-600 font-medium">Pagu belum diatur! Silakan atur di menu Konfigurasi Pagu.</p>
-                                    )}
-                                </div>
+                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                                <p className="text-xs text-blue-700 font-semibold uppercase tracking-wider">Pagu Terkonfigurasi</p>
+                                <p className="text-lg font-bold text-blue-900">{formatCurrency(currentPagu)}</p>
                             </div>
 
                             <div className="space-y-2">
                                 <Label className="text-emerald-700 font-bold">Realisasi Bulan Ini (Rp)</Label>
-                                <Input 
-                                    type="number" 
-                                    className="text-lg font-semibold border-emerald-200 focus:ring-emerald-500"
-                                    placeholder="Masukkan nominal realisasi..." 
-                                    value={formData.realisasi} 
-                                    onChange={e => setFormData(prev => ({ ...prev, realisasi: parseFloat(e.target.value) }))}
-                                    required
-                                />
+                                <Input type="number" className="text-lg font-semibold border-emerald-200" value={formData.realisasi} onChange={e => setFormData(prev => ({ ...prev, realisasi: parseFloat(e.target.value) }))} required />
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Link Dokumen (doc)</Label>
-                                <Input 
-                                    placeholder="https://drive.google.com/..." 
-                                    value={formData.link_dokumen || ''} 
-                                    onChange={e => setFormData(prev => ({ ...prev, link_dokumen: e.target.value }))}
-                                />
+                                <Label>Upload Dokumen Realisasi (PDF/Gambar)</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input type="file" onChange={e => setFileDokumen(e.target.files?.[0] || null)} accept=".pdf,image/*" />
+                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground italic">File ini akan muncul di kolom 'doc' website publik.</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Atau Link Manual (Google Drive)</Label>
+                                <Input placeholder="https://drive.google.com/..." value={formData.link_dokumen || ''} onChange={e => setFormData(prev => ({ ...prev, link_dokumen: e.target.value }))} />
                             </div>
 
                             <div className="pt-4 flex justify-end gap-2">
                                 <Link href="/anggaran"><Button type="button" variant="outline">Batal</Button></Link>
                                 <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={loading || currentPagu === 0}>
                                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                    Simpan Realisasi
+                                    Simpan Data
                                 </Button>
                             </div>
                         </form>
