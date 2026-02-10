@@ -75,7 +75,7 @@ export default function LhkpnAdd() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Formulir Pelaporan</CardTitle>
-                        <CardDescription>Pilih jenis laporan sesuai jabatan (LHKPN untuk Pejabat, LHKASN untuk Pegawai).</CardDescription>
+                        <CardDescription>Pilih jenis laporan sesuai jabatan (LHKPN untuk Pejabat, SPT Tahunan untuk Pegawai).</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,7 +100,7 @@ export default function LhkpnAdd() {
                                         <SelectTrigger><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="LHKPN">LHKPN (Penyelenggara Negara)</SelectItem>
-                                            <SelectItem value="LHKASN">LHKASN (Pegawai ASN)</SelectItem>
+                                            <SelectItem value="SPT Tahunan">SPT Tahunan (Pegawai ASN)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -136,7 +136,7 @@ export default function LhkpnAdd() {
                                         <div className="space-y-2">
                                             <Label>File Bukti Pelaporan (SPT Tahunan)</Label>
                                             <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_spt: e.target.files?.[0] || null }))} />
-                                            <p className="text-[10px] text-emerald-700 font-medium italic">* Bagi ASN, laporan SPT dianggap sebagai pemenuhan LHKASN.</p>
+                                            <p className="text-[10px] text-emerald-700 font-medium italic">* Bagi ASN, laporan SPT Tahunan merupakan pemenuhan kewajiban pelaporan.</p>
                                         </div>
                                     </div>
                                 )}
