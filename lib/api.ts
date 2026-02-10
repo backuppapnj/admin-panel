@@ -285,11 +285,12 @@ export async function deletePanggilanEcourt(id: number): Promise<ApiResponse<nul
 // API AGENDA PIMPINAN
 // ==========================================
 
-export async function getAllAgenda(tahun?: number, bulan?: string): Promise<ApiResponse<AgendaPimpinan[]>> {
+export async function getAllAgenda(tahun?: number, bulan?: string, page = 1): Promise<ApiResponse<AgendaPimpinan[]>> {
   const qs: string[] = [];
   if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
   if (bulan) qs.push(`bulan=${encodeURIComponent(bulan)}`);
-  const url = qs.length ? `${API_URL}/agenda?${qs.join('&')}` : `${API_URL}/agenda`;
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/agenda?${qs.join('&')}`;
 
   const response = await fetch(url, { cache: 'no-store' });
   return normalizeApiResponse<AgendaPimpinan[]>(response);
@@ -345,10 +346,27 @@ export interface LhkpnReport {
   updated_at?: string;
 }
 
-export async function getAllLhkpn(tahun?: number): Promise<ApiResponse<LhkpnReport[]>> {
+export interface RealisasiAnggaran {
+  id?: number;
+  dipa: string;
+  kategori: string;
+  bulan?: number;
+  pagu: number;
+  realisasi: number;
+  sisa?: number;
+  persentase?: number;
+  tahun: number;
+  keterangan?: string;
+  link_dokumen?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllLhkpn(tahun?: number, page = 1): Promise<ApiResponse<LhkpnReport[]>> {
   const qs: string[] = [];
   if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
-  const url = qs.length ? `${API_URL}/lhkpn?${qs.join('&')}` : `${API_URL}/lhkpn`;
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/lhkpn?${qs.join('&')}`;
 
   const response = await fetch(url, { cache: 'no-store' });
   return normalizeApiResponse<LhkpnReport[]>(response);
@@ -360,20 +378,29 @@ export async function getLhkpn(id: number): Promise<LhkpnReport | null> {
   return result.data || null;
 }
 
-export async function createLhkpn(data: LhkpnReport): Promise<ApiResponse<LhkpnReport>> {
+export async function createLhkpn(data: LhkpnReport | FormData): Promise<ApiResponse<LhkpnReport>> {
+  const isFormData = data instanceof FormData;
   const response = await fetch(`${API_URL}/lhkpn`, {
     method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(data),
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
   });
   return normalizeApiResponse<LhkpnReport>(response);
 }
 
-export async function updateLhkpn(id: number, data: Partial<LhkpnReport>): Promise<ApiResponse<LhkpnReport>> {
+export async function updateLhkpn(id: number, data: Partial<LhkpnReport> | FormData): Promise<ApiResponse<LhkpnReport>> {
+  const isFormData = data instanceof FormData;
+
+  // For file uploads, use POST with _method=PUT
+  const method = isFormData ? 'POST' : 'PUT';
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+
   const response = await fetch(`${API_URL}/lhkpn/${id}`, {
-    method: 'PUT',
-    headers: getHeaders(),
-    body: JSON.stringify(data),
+    method: method,
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
   });
   return normalizeApiResponse<LhkpnReport>(response);
 }
@@ -385,3 +412,90 @@ export async function deleteLhkpn(id: number): Promise<ApiResponse<null>> {
   });
   return normalizeApiResponse<null>(response);
 }
+
+// ==========================================
+// API REALISASI ANGGARAN
+// ==========================================
+
+export async function getAllAnggaran(tahun?: number, dipa?: string, bulan?: number, page = 1): Promise<ApiResponse<RealisasiAnggaran[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  if (dipa) qs.push(`dipa=${encodeURIComponent(dipa)}`);
+  if (bulan) qs.push(`bulan=${encodeURIComponent(String(bulan))}`);
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/anggaran?${qs.join('&')}`;
+
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<RealisasiAnggaran[]>(response);
+}
+
+export async function getAnggaran(id: number): Promise<RealisasiAnggaran | null> {
+  const response = await fetch(`${API_URL}/anggaran/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<RealisasiAnggaran>(response);
+  return result.data || null;
+}
+
+export async function createAnggaran(data: RealisasiAnggaran): Promise<ApiResponse<RealisasiAnggaran>> {
+  const response = await fetch(`${API_URL}/anggaran`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<RealisasiAnggaran>(response);
+}
+
+export async function updateAnggaran(id: number, data: Partial<RealisasiAnggaran>): Promise<ApiResponse<RealisasiAnggaran>> {
+  const response = await fetch(`${API_URL}/anggaran/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<RealisasiAnggaran>(response);
+}
+
+export async function deleteAnggaran(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/anggaran/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
+// API PAGU ANGGARAN
+// ==========================================
+
+export interface PaguAnggaran {
+  id?: number;
+  dipa: string;
+  kategori: string;
+  jumlah_pagu: number;
+  tahun: number;
+}
+
+export async function getAllPagu(tahun?: number, dipa?: string): Promise<ApiResponse<PaguAnggaran[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  if (dipa) qs.push(`dipa=${encodeURIComponent(dipa)}`);
+  const url = qs.length ? `${API_URL}/pagu?${qs.join('&')}` : `${API_URL}/pagu`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<PaguAnggaran[]>(response);
+}
+
+export async function updatePagu(data: PaguAnggaran): Promise<ApiResponse<PaguAnggaran>> {
+  const response = await fetch(`${API_URL}/pagu`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<PaguAnggaran>(response);
+}
+
+export async function deletePagu(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/pagu/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+

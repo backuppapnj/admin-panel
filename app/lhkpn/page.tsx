@@ -18,6 +18,9 @@ import {
 import {
     AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis
+} from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlusCircle, RefreshCw, Trash2, Edit, ExternalLink, FileText } from 'lucide-react';
 import { BlurFade } from "@/components/ui/blur-fade";
@@ -30,13 +33,24 @@ export default function LhkpnList() {
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const { toast } = useToast();
 
-    const loadData = async () => {
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        total: 0
+    });
+
+    const loadData = async (page = 1) => {
         setLoading(true);
         try {
             const year = (filterTahun && filterTahun !== "all") ? parseInt(filterTahun) : undefined;
-            const result = await getAllLhkpn(year);
+            const result = await getAllLhkpn(year, page);
             if (result.success && result.data) {
                 setData(result.data);
+                setPagination({
+                    current_page: result.current_page || 1,
+                    last_page: result.last_page || 1,
+                    total: result.total || 0
+                });
             } else {
                 setData([]);
             }
@@ -51,7 +65,7 @@ export default function LhkpnList() {
     };
 
     useEffect(() => {
-        loadData();
+        loadData(1);
     }, [filterTahun]);
 
     const handleDelete = async () => {
@@ -64,7 +78,7 @@ export default function LhkpnList() {
                 description: "Data berhasil dihapus!",
             });
             setDeleteId(null);
-            loadData();
+            loadData(pagination.current_page);
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -81,6 +95,35 @@ export default function LhkpnList() {
             month: 'long',
             year: 'numeric'
         });
+    };
+
+    const renderPaginationItems = () => {
+        const { current_page, last_page } = pagination;
+        const items = [];
+        const delta = 2;
+
+        for (let i = 1; i <= last_page; i++) {
+            if (i === 1 || i === last_page || (i >= current_page - delta && i <= current_page + delta)) {
+                items.push(
+                    <PaginationItem key={i}>
+                        <PaginationLink
+                            isActive={current_page === i}
+                            onClick={() => loadData(i)}
+                            className="cursor-pointer"
+                        >
+                            {i}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            } else if (
+                items.length > 0 &&
+                (items[items.length - 1] as any)?.key &&
+                !String((items[items.length - 1] as any).key).startsWith('ellipsis')
+            ) {
+                items.push(<PaginationItem key={`ellipsis-${i}`}><PaginationEllipsis /></PaginationItem>);
+            }
+        }
+        return items;
     };
 
     return (
@@ -116,7 +159,7 @@ export default function LhkpnList() {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <Button variant="outline" size="icon" onClick={loadData}>
+                            <Button variant="outline" size="icon" onClick={() => loadData(pagination.current_page)}>
                                 <RefreshCw className="h-4 w-4" />
                             </Button>
                         </div>
@@ -152,7 +195,9 @@ export default function LhkpnList() {
                                     ) : (
                                         data.map((item, index) => (
                                             <TableRow key={item.id}>
-                                                <TableCell className="text-center">{index + 1}</TableCell>
+                                                <TableCell className="text-center">
+                                                    {(pagination.current_page - 1) * 15 + index + 1}
+                                                </TableCell>
                                                 <TableCell>
                                                     <div className="font-medium">{item.nama}</div>
                                                     <div className="text-xs text-muted-foreground">{item.nip}</div>
@@ -204,6 +249,42 @@ export default function LhkpnList() {
                                 </TableBody>
                             </Table>
                         </div>
+
+                        {/* Pagination Section */}
+                        {!loading && pagination.last_page > 1 && (
+                            <div className="mt-4">
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <PaginationPrevious
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    if (pagination.current_page > 1) loadData(pagination.current_page - 1);
+                                                }}
+                                                className={pagination.current_page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+
+                                        {renderPaginationItems()}
+
+                                        <PaginationItem>
+                                            <PaginationNext
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    if (pagination.current_page < pagination.last_page) loadData(pagination.current_page + 1);
+                                                }}
+                                                className={pagination.current_page === pagination.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                            />
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                                <p className="text-xs text-center text-muted-foreground mt-2">
+                                    Menampilkan halaman {pagination.current_page} dari {pagination.last_page} (Total {pagination.total} data)
+                                </p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </BlurFade>

@@ -7,12 +7,12 @@ import pegawaiData from '@/app/data/pegawai.json';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from "@/components/ui/blur-fade";
 
@@ -25,6 +25,10 @@ export default function LhkpnEdit() {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [formData, setFormData] = useState<Partial<LhkpnReport>>({});
+
+    // File states
+    const [fileTandaTerima, setFileTandaTerima] = useState<File | null>(null);
+    const [fileDokumen, setFileDokumen] = useState<File | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,7 +64,38 @@ export default function LhkpnEdit() {
         e.preventDefault();
         setLoading(true);
         try {
-            const result = await updateLhkpn(id, formData);
+            // Use FormData for file uploads
+            const dataToSend = new FormData();
+            dataToSend.append('nip', formData.nip || '');
+            dataToSend.append('nama', formData.nama || '');
+            dataToSend.append('jabatan', formData.jabatan || '');
+            dataToSend.append('tahun', String(formData.tahun || new Date().getFullYear()));
+            dataToSend.append('jenis_laporan', formData.jenis_laporan || 'LHKPN');
+
+            // Handle date format
+            let tanggalLapor = formData.tanggal_lapor || '';
+            if (tanggalLapor && tanggalLapor.includes('T')) {
+                tanggalLapor = tanggalLapor.split('T')[0];
+            }
+            dataToSend.append('tanggal_lapor', tanggalLapor);
+
+            // Add URL links if no new file uploaded
+            if (!fileTandaTerima && formData.link_tanda_terima) {
+                dataToSend.append('link_tanda_terima', formData.link_tanda_terima);
+            }
+            if (!fileDokumen && formData.link_dokumen_pendukung) {
+                dataToSend.append('link_dokumen_pendukung', formData.link_dokumen_pendukung);
+            }
+
+            // Add files if selected
+            if (fileTandaTerima) {
+                dataToSend.append('file_tanda_terima', fileTandaTerima);
+            }
+            if (fileDokumen) {
+                dataToSend.append('file_dokumen_pendukung', fileDokumen);
+            }
+
+            const result = await updateLhkpn(id, dataToSend);
             if (result.success) {
                 toast({
                     title: "Sukses",
@@ -101,6 +136,7 @@ export default function LhkpnEdit() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Edit LHKPN / SPT Tahunan</CardTitle>
+                        <CardDescription>Perbarui data pegawai dan upload dokumen baru jika perlu.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -108,7 +144,6 @@ export default function LhkpnEdit() {
                             <div className="space-y-2">
                                 <Label>Pegawai</Label>
                                 <Select onValueChange={handlePegawaiChange} defaultValue={
-                                    // Try to find the matching ID based on NIP strictly
                                     pegawaiData.find(p => p.nip === formData.nip)?.id.toString()
                                 }>
                                     <SelectTrigger>
@@ -166,22 +201,83 @@ export default function LhkpnEdit() {
                                 />
                             </div>
 
+                            {/* File Upload - Tanda Terima */}
                             <div className="space-y-2">
-                                <Label>Link Tanda Terima (Google Drive)</Label>
-                                <Input
-                                    placeholder="https://drive.google.com/..."
-                                    value={formData.link_tanda_terima || ''}
-                                    onChange={e => setFormData(prev => ({ ...prev, link_tanda_terima: e.target.value }))}
-                                />
+                                <Label htmlFor="file_tanda_terima">Upload Tanda Terima Baru (PDF/Gambar)</Label>
+                                {formData.link_tanda_terima && (
+                                    <div className="flex items-center gap-2 p-2 bg-green-50 rounded-md border border-green-200 text-sm">
+                                        <ExternalLink className="h-4 w-4 text-green-600" />
+                                        <a href={formData.link_tanda_terima} target="_blank" rel="noopener noreferrer" className="text-green-700 hover:underline truncate">
+                                            Dokumen tersimpan (klik untuk lihat)
+                                        </a>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="file_tanda_terima"
+                                        type="file"
+                                        onChange={e => setFileTandaTerima(e.target.files?.[0] || null)}
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                        className="cursor-pointer"
+                                    />
+                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Upload file baru untuk mengganti dokumen yang ada. Format: PDF, DOC, Gambar. Max 5MB.
+                                </p>
                             </div>
 
+                            {/* File Upload - Dokumen Pendukung */}
                             <div className="space-y-2">
-                                <Label>Link Dokumen Pendukung (Opsional)</Label>
-                                <Input
-                                    placeholder="https://drive.google.com/..."
-                                    value={formData.link_dokumen_pendukung || ''}
-                                    onChange={e => setFormData(prev => ({ ...prev, link_dokumen_pendukung: e.target.value }))}
-                                />
+                                <Label htmlFor="file_dokumen">Upload Dokumen Pendukung Baru (Opsional)</Label>
+                                {formData.link_dokumen_pendukung && (
+                                    <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-md border border-blue-200 text-sm">
+                                        <ExternalLink className="h-4 w-4 text-blue-600" />
+                                        <a href={formData.link_dokumen_pendukung} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline truncate">
+                                            Dokumen tersimpan (klik untuk lihat)
+                                        </a>
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="file_dokumen"
+                                        type="file"
+                                        onChange={e => setFileDokumen(e.target.files?.[0] || null)}
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                        className="cursor-pointer"
+                                    />
+                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Upload file baru untuk mengganti dokumen yang ada. Format: PDF, DOC, Gambar. Max 5MB.
+                                </p>
+                            </div>
+
+                            {/* Alternative: Manual URL Input */}
+                            <div className="border-t pt-4 mt-4">
+                                <p className="text-sm text-muted-foreground mb-3">
+                                    Atau edit link Google Drive secara manual:
+                                </p>
+                                <div className="space-y-3">
+                                    <div className="space-y-2">
+                                        <Label>Link Tanda Terima</Label>
+                                        <Input
+                                            placeholder="https://drive.google.com/..."
+                                            value={formData.link_tanda_terima || ''}
+                                            onChange={e => setFormData(prev => ({ ...prev, link_tanda_terima: e.target.value }))}
+                                            disabled={!!fileTandaTerima}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Link Dokumen Pendukung</Label>
+                                        <Input
+                                            placeholder="https://drive.google.com/..."
+                                            value={formData.link_dokumen_pendukung || ''}
+                                            onChange={e => setFormData(prev => ({ ...prev, link_dokumen_pendukung: e.target.value }))}
+                                            disabled={!!fileDokumen}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="pt-4 flex justify-end gap-2">

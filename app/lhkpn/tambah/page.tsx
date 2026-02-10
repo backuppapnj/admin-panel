@@ -7,12 +7,12 @@ import pegawaiData from '@/app/data/pegawai.json';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from "@/components/ui/blur-fade";
 
@@ -26,12 +26,13 @@ export default function LhkpnAdd() {
         tanggal_lapor: new Date().toISOString().split('T')[0],
     });
 
+    // File states
+    const [fileTandaTerima, setFileTandaTerima] = useState<File | null>(null);
+    const [fileDokumen, setFileDokumen] = useState<File | null>(null);
+
     const handlePegawaiChange = (value: string) => {
         const selectedPegawai = pegawaiData.find(p => p.id.toString() === value || p.nip === value);
         if (selectedPegawai) {
-            // Find if user selected by index or unique ID if collisions exist, but assuming ID/NIP is unique enough
-            // In the JSON, ID is unique. NIP is also unique.
-            // Let's assume value is the ID from the Select
             setFormData(prev => ({
                 ...prev,
                 nip: selectedPegawai.nip,
@@ -50,7 +51,32 @@ export default function LhkpnAdd() {
 
         setLoading(true);
         try {
-            const result = await createLhkpn(formData as LhkpnReport);
+            // Use FormData for file uploads
+            const dataToSend = new FormData();
+            dataToSend.append('nip', formData.nip || '');
+            dataToSend.append('nama', formData.nama || '');
+            dataToSend.append('jabatan', formData.jabatan || '');
+            dataToSend.append('tahun', String(formData.tahun || new Date().getFullYear()));
+            dataToSend.append('jenis_laporan', formData.jenis_laporan || 'LHKPN');
+            dataToSend.append('tanggal_lapor', formData.tanggal_lapor || '');
+
+            // Add URL links if provided (fallback if no file uploaded)
+            if (!fileTandaTerima && formData.link_tanda_terima) {
+                dataToSend.append('link_tanda_terima', formData.link_tanda_terima);
+            }
+            if (!fileDokumen && formData.link_dokumen_pendukung) {
+                dataToSend.append('link_dokumen_pendukung', formData.link_dokumen_pendukung);
+            }
+
+            // Add files if selected
+            if (fileTandaTerima) {
+                dataToSend.append('file_tanda_terima', fileTandaTerima);
+            }
+            if (fileDokumen) {
+                dataToSend.append('file_dokumen_pendukung', fileDokumen);
+            }
+
+            const result = await createLhkpn(dataToSend);
             if (result.success) {
                 toast({
                     title: "Sukses",
@@ -87,6 +113,7 @@ export default function LhkpnAdd() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Formulir LHKPN / SPT Tahunan</CardTitle>
+                        <CardDescription>Isi data pegawai dan upload dokumen bukti pelaporan.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -149,22 +176,67 @@ export default function LhkpnAdd() {
                                 />
                             </div>
 
+                            {/* File Upload - Tanda Terima */}
                             <div className="space-y-2">
-                                <Label>Link Tanda Terima (Google Drive)</Label>
-                                <Input
-                                    placeholder="https://drive.google.com/..."
-                                    value={formData.link_tanda_terima || ''}
-                                    onChange={e => setFormData(prev => ({ ...prev, link_tanda_terima: e.target.value }))}
-                                />
+                                <Label htmlFor="file_tanda_terima">Upload Tanda Terima (PDF/Gambar)</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="file_tanda_terima"
+                                        type="file"
+                                        onChange={e => setFileTandaTerima(e.target.files?.[0] || null)}
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                        className="cursor-pointer"
+                                    />
+                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    File akan diupload ke Google Drive. Format: PDF, DOC, Gambar. Max 5MB.
+                                </p>
                             </div>
 
+                            {/* File Upload - Dokumen Pendukung */}
                             <div className="space-y-2">
-                                <Label>Link Dokumen Pendukung (Opsional)</Label>
-                                <Input
-                                    placeholder="https://drive.google.com/..."
-                                    value={formData.link_dokumen_pendukung || ''}
-                                    onChange={e => setFormData(prev => ({ ...prev, link_dokumen_pendukung: e.target.value }))}
-                                />
+                                <Label htmlFor="file_dokumen">Upload Dokumen Pendukung (Opsional)</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="file_dokumen"
+                                        type="file"
+                                        onChange={e => setFileDokumen(e.target.files?.[0] || null)}
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                        className="cursor-pointer"
+                                    />
+                                    <Upload className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    File akan diupload ke Google Drive. Format: PDF, DOC, Gambar. Max 5MB.
+                                </p>
+                            </div>
+
+                            {/* Alternative: Manual URL Input */}
+                            <div className="border-t pt-4 mt-4">
+                                <p className="text-sm text-muted-foreground mb-3">
+                                    Atau masukkan link Google Drive secara manual (jika tidak upload file):
+                                </p>
+                                <div className="space-y-3">
+                                    <div className="space-y-2">
+                                        <Label>Link Tanda Terima (Google Drive)</Label>
+                                        <Input
+                                            placeholder="https://drive.google.com/..."
+                                            value={formData.link_tanda_terima || ''}
+                                            onChange={e => setFormData(prev => ({ ...prev, link_tanda_terima: e.target.value }))}
+                                            disabled={!!fileTandaTerima}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Link Dokumen Pendukung (Google Drive)</Label>
+                                        <Input
+                                            placeholder="https://drive.google.com/..."
+                                            value={formData.link_dokumen_pendukung || ''}
+                                            onChange={e => setFormData(prev => ({ ...prev, link_dokumen_pendukung: e.target.value }))}
+                                            disabled={!!fileDokumen}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="pt-4 flex justify-end gap-2">

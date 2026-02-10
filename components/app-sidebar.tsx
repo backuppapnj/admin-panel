@@ -7,6 +7,8 @@ import {
     Megaphone,
     Gavel,
     CalendarDays,
+    FileText,
+    Coins,
     LogOut,
     ChevronUp,
     User2
@@ -62,6 +64,18 @@ const routes = [
         icon: CalendarDays,
         href: '/agenda',
         color: 'text-red-500',
+    },
+    {
+        label: 'LHKPN & SPT',
+        icon: FileText,
+        href: '/lhkpn',
+        color: 'text-amber-500',
+    },
+    {
+        label: 'Realisasi Anggaran',
+        icon: Coins,
+        href: '/anggaran',
+        color: 'text-emerald-400',
     },
 ];
 

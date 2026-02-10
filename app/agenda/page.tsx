@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { deleteAgenda, getAllAgenda, type AgendaPimpinan } from '@/lib/api';
 import { getYearOptions } from '@/lib/utils';
@@ -24,8 +24,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { BlurFade } from '@/components/ui/blur-fade';
 import { CalendarDays, Edit, PlusCircle, RefreshCw, Trash2 } from 'lucide-react';
-
-const PER_PAGE = 10;
 
 function formatTanggalISO(iso: string | undefined) {
   if (!iso) return '-';
@@ -51,30 +49,29 @@ export default function AgendaList() {
   const [data, setData] = useState<AgendaPimpinan[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterTahun, setFilterTahun] = useState<string>('all');
-  const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const total = data.length;
-  const lastPage = Math.max(1, Math.ceil(total / PER_PAGE));
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    total: 0
+  });
 
-  const pageData = useMemo(() => {
-    const start = (page - 1) * PER_PAGE;
-    return data.slice(start, start + PER_PAGE);
-  }, [data, page]);
-
-  const loadData = async () => {
+  const loadData = async (page = 1) => {
     setLoading(true);
     try {
       const year = filterTahun !== 'all' ? parseInt(filterTahun) : undefined;
-      const result = await getAllAgenda(year);
+      const result = await getAllAgenda(year, undefined, page);
 
       if (result.success && result.data) {
         setData(result.data);
+        setPagination({
+          current_page: result.current_page || 1,
+          last_page: result.last_page || 1,
+          total: result.total || 0
+        });
       } else {
         setData([]);
-        if (result.message) {
-          toast({ variant: 'destructive', title: 'Gagal', description: result.message });
-        }
       }
     } catch {
       toast({
@@ -88,9 +85,7 @@ export default function AgendaList() {
   };
 
   useEffect(() => {
-    setPage(1);
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadData(1);
   }, [filterTahun]);
 
   const handleDelete = async () => {
@@ -100,9 +95,7 @@ export default function AgendaList() {
       if (result.success) {
         toast({ title: 'Sukses', description: 'Agenda berhasil dihapus!' });
         setDeleteId(null);
-        await loadData();
-      } else {
-        toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Gagal menghapus agenda.' });
+        await loadData(pagination.current_page);
       }
     } catch {
       toast({ variant: 'destructive', title: 'Error', description: 'Terjadi kesalahan saat menghapus data.' });
@@ -110,14 +103,15 @@ export default function AgendaList() {
   };
 
   const renderPaginationItems = () => {
+    const { current_page, last_page } = pagination;
     const items = [];
     const delta = 2;
 
-    for (let i = 1; i <= lastPage; i++) {
-      if (i === 1 || i === lastPage || (i >= page - delta && i <= page + delta)) {
+    for (let i = 1; i <= last_page; i++) {
+      if (i === 1 || i === last_page || (i >= current_page - delta && i <= current_page + delta)) {
         items.push(
           <PaginationItem key={i}>
-            <PaginationLink isActive={page === i} onClick={() => setPage(i)} className="cursor-pointer">
+            <PaginationLink isActive={current_page === i} onClick={() => loadData(i)} className="cursor-pointer">
               {i}
             </PaginationLink>
           </PaginationItem>
@@ -125,16 +119,9 @@ export default function AgendaList() {
       } else if (
         items.length > 0 &&
         (items[items.length - 1] as any)?.key &&
-        Number((items[items.length - 1] as any).key) !== i - 1
+        !String((items[items.length - 1] as any).key).startsWith('ellipsis')
       ) {
-        const lastKey = (items[items.length - 1] as any).key;
-        if (typeof lastKey === 'number' || !String(lastKey).startsWith('ellipsis')) {
-          items.push(
-            <PaginationItem key={`ellipsis-${i}`}>
-              <PaginationEllipsis />
-            </PaginationItem>
-          );
-        }
+        items.push(<PaginationItem key={`ellipsis-${i}`}><PaginationEllipsis /></PaginationItem>);
       }
     }
 
@@ -177,7 +164,7 @@ export default function AgendaList() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="icon" onClick={() => loadData()}>
+              <Button variant="outline" size="icon" onClick={() => loadData(pagination.current_page)}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
@@ -186,7 +173,7 @@ export default function AgendaList() {
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="bg-slate-50/50">
                     <TableHead className="w-[50px] text-center">No</TableHead>
                     <TableHead className="w-[200px]">Tanggal</TableHead>
                     <TableHead>Agenda</TableHead>
@@ -197,30 +184,22 @@ export default function AgendaList() {
                   {loading ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton className="h-4 w-8" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-40" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-[520px]" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-8 w-20 float-right" />
-                        </TableCell>
+                        <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-[520px]" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-20 float-right" /></TableCell>
                       </TableRow>
                     ))
-                  ) : pageData.length === 0 ? (
+                  ) : data.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="h-24 text-center">
                         Tidak ada agenda.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    pageData.map((item, idx) => (
-                      <TableRow key={item.id ?? `${item.tanggal_agenda}-${idx}`}>
-                        <TableCell className="text-center">{(page - 1) * PER_PAGE + idx + 1}</TableCell>
+                    data.map((item, idx) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="text-center">{(pagination.current_page - 1) * 10 + idx + 1}</TableCell>
                         <TableCell className="font-medium">{formatTanggalISO(item.tanggal_agenda)}</TableCell>
                         <TableCell className="text-muted-foreground">{truncateText(item.isi_agenda)}</TableCell>
                         <TableCell className="text-right">
@@ -248,7 +227,7 @@ export default function AgendaList() {
               </Table>
             </div>
 
-            {!loading && lastPage > 1 && (
+            {!loading && pagination.last_page > 1 && (
               <div className="mt-4">
                 <Pagination>
                   <PaginationContent>
@@ -257,9 +236,9 @@ export default function AgendaList() {
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          if (page > 1) setPage(page - 1);
+                          if (pagination.current_page > 1) loadData(pagination.current_page - 1);
                         }}
-                        className={page === 1 ? 'pointer-events-none opacity-50' : ''}
+                        className={pagination.current_page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                       />
                     </PaginationItem>
                     {renderPaginationItems()}
@@ -268,15 +247,15 @@ export default function AgendaList() {
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          if (page < lastPage) setPage(page + 1);
+                          if (pagination.current_page < pagination.last_page) loadData(pagination.current_page + 1);
                         }}
-                        className={page === lastPage ? 'pointer-events-none opacity-50' : ''}
+                        className={pagination.current_page === pagination.last_page ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
                 <p className="text-xs text-center text-muted-foreground mt-2">
-                  Menampilkan halaman {page} dari {lastPage} (Total {total} data)
+                  Menampilkan halaman {pagination.current_page} dari {pagination.last_page} (Total {pagination.total} data)
                 </p>
               </div>
             )}
