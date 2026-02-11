@@ -364,9 +364,11 @@ export interface RealisasiAnggaran {
   updated_at?: string;
 }
 
-export async function getAllLhkpn(tahun?: number, page = 1): Promise<ApiResponse<LhkpnReport[]>> {
+export async function getAllLhkpn(tahun?: number, page = 1, q?: string, jenis?: string): Promise<ApiResponse<LhkpnReport[]>> {
   const qs: string[] = [];
   if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  if (q) qs.push(`q=${encodeURIComponent(q)}`);
+  if (jenis) qs.push(`jenis=${encodeURIComponent(jenis)}`);
   qs.push(`page=${page}`);
   const url = `${API_URL}/lhkpn?${qs.join('&')}`;
 

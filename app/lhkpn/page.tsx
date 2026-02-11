@@ -22,14 +22,17 @@ import {
     Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlusCircle, RefreshCw, Trash2, Edit, ExternalLink, FileText } from 'lucide-react';
+import { PlusCircle, RefreshCw, Trash2, Edit, ExternalLink, FileText, Search } from 'lucide-react';
 import { BlurFade } from "@/components/ui/blur-fade";
 import { Badge } from "@/components/ui/badge";
+import { Input } from '@/components/ui/input';
 
 export default function LhkpnList() {
     const [data, setData] = useState<LhkpnReport[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterTahun, setFilterTahun] = useState<string>("all");
+    const [filterJenis, setFilterJenis] = useState<string>("all");
+    const [searchQuery, setSearchQuery] = useState<string>("");
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const { toast } = useToast();
 
@@ -43,7 +46,9 @@ export default function LhkpnList() {
         setLoading(true);
         try {
             const year = (filterTahun && filterTahun !== "all") ? parseInt(filterTahun) : undefined;
-            const result = await getAllLhkpn(year, page);
+            const jenis = (filterJenis && filterJenis !== "all") ? filterJenis : undefined;
+            const q = searchQuery.trim() || undefined;
+            const result = await getAllLhkpn(year, page, q, jenis);
             if (result.success && result.data) {
                 setData(result.data);
                 setPagination({
@@ -66,7 +71,12 @@ export default function LhkpnList() {
 
     useEffect(() => {
         loadData(1);
-    }, [filterTahun]);
+    }, [filterTahun, filterJenis]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => loadData(1), 400);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const handleDelete = async () => {
         if (!deleteId) return;
@@ -145,11 +155,25 @@ export default function LhkpnList() {
 
             <BlurFade delay={0.2} inView>
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                        <CardTitle className="text-lg font-medium">Daftar Laporan</CardTitle>
-                        <div className="flex items-center gap-2">
+                    <CardHeader className="space-y-4 pb-4">
+                        <div className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-lg font-medium">Daftar Laporan</CardTitle>
+                            <Button variant="outline" size="icon" onClick={() => loadData(pagination.current_page)}>
+                                <RefreshCw className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Cari nama atau NIP..."
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                    className="pl-9"
+                                />
+                            </div>
                             <Select value={filterTahun} onValueChange={setFilterTahun}>
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-full sm:w-[150px]">
                                     <SelectValue placeholder="Semua Tahun" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -159,9 +183,16 @@ export default function LhkpnList() {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <Button variant="outline" size="icon" onClick={() => loadData(pagination.current_page)}>
-                                <RefreshCw className="h-4 w-4" />
-                            </Button>
+                            <Select value={filterJenis} onValueChange={setFilterJenis}>
+                                <SelectTrigger className="w-full sm:w-[170px]">
+                                    <SelectValue placeholder="Semua Jenis" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua Jenis</SelectItem>
+                                    <SelectItem value="LHKPN">LHKPN</SelectItem>
+                                    <SelectItem value="SPT Tahunan">SPT Tahunan</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -217,6 +248,16 @@ export default function LhkpnList() {
                                                         {item.link_tanda_terima && (
                                                             <a href={item.link_tanda_terima} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
                                                                 <FileText className="h-3 w-3" /> Tanda Terima
+                                                            </a>
+                                                        )}
+                                                        {item.link_pengumuman && (
+                                                            <a href={item.link_pengumuman} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-600 hover:underline flex items-center gap-1">
+                                                                <FileText className="h-3 w-3" /> Pengumuman
+                                                            </a>
+                                                        )}
+                                                        {item.link_spt && (
+                                                            <a href={item.link_spt} target="_blank" rel="noopener noreferrer" className="text-xs text-amber-600 hover:underline flex items-center gap-1">
+                                                                <FileText className="h-3 w-3" /> SPT
                                                             </a>
                                                         )}
                                                         {item.link_dokumen_pendukung && (

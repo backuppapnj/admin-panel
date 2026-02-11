@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Loader2, FileText } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, FileText, Info } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from "@/components/ui/blur-fade";
 
@@ -104,18 +104,35 @@ export default function LhkpnEdit() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
-                                {[
-                                    { label: 'Tanda Terima', file: 'file_tanda_terima', link: 'link_tanda_terima' },
-                                    { label: 'Pengumuman', file: 'file_pengumuman', link: 'link_pengumuman' },
-                                    { label: 'SPT', file: 'file_spt', link: 'link_spt' },
-                                    { label: 'Lainnya', file: 'file_dokumen_pendukung', link: 'link_dokumen_pendukung' },
-                                ].map(item => (
-                                    <div key={item.file} className="space-y-2">
-                                        <Label>{item.label} {formData[item.link as keyof LhkpnReport] && <span className="text-[10px] text-emerald-600">(Sudah ada)</span>}</Label>
-                                        <Input type="file" onChange={e => setFiles(prev => ({ ...prev, [item.file]: e.target.files?.[0] || null }))} />
+                            <div className="border-t pt-4 space-y-4">
+                                <Label className="text-blue-700 font-bold flex items-center gap-2">
+                                    <Info className="h-4 w-4" /> Dokumen Bukti
+                                </Label>
+
+                                {formData.jenis_laporan === 'LHKPN' ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                                        <div className="space-y-2">
+                                            <Label>File Tanda Terima LHKPN {formData.link_tanda_terima && <span className="text-[10px] text-emerald-600">(Sudah ada)</span>}</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_tanda_terima: e.target.files?.[0] || null }))} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>File Pengumuman LHKPN {formData.link_pengumuman && <span className="text-[10px] text-emerald-600">(Sudah ada)</span>}</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_pengumuman: e.target.files?.[0] || null }))} />
+                                        </div>
+                                        <div className="space-y-2 md:col-span-2">
+                                            <Label>File SPT Tahunan (Bukti Pajak) {formData.link_spt && <span className="text-[10px] text-emerald-600">(Sudah ada)</span>}</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_spt: e.target.files?.[0] || null }))} />
+                                        </div>
                                     </div>
-                                ))}
+                                ) : (
+                                    <div className="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
+                                        <div className="space-y-2">
+                                            <Label>File Bukti Pelaporan (SPT Tahunan) {formData.link_spt && <span className="text-[10px] text-emerald-600">(Sudah ada)</span>}</Label>
+                                            <Input type="file" onChange={e => setFiles(prev => ({ ...prev, file_spt: e.target.files?.[0] || null }))} />
+                                            <p className="text-[10px] text-emerald-700 font-medium italic">* Bagi ASN, laporan SPT Tahunan merupakan pemenuhan kewajiban pelaporan.</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="pt-4 flex justify-end gap-2">
