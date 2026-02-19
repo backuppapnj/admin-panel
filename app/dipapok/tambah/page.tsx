@@ -48,16 +48,18 @@ export default function DipaPokAdd() {
 
     useEffect(() => {
         if (formData.thn_dipa) {
-            loadRevisiOptions(formData.thn_dipa);
+            loadRevisiOptions(formData.thn_dipa, formData.jns_dipa);
         }
-    }, [formData.thn_dipa]);
+    }, [formData.thn_dipa, formData.jns_dipa]);
 
-    const loadRevisiOptions = async (tahun: number) => {
+    const loadRevisiOptions = async (tahun: number, jnsDipa?: string) => {
         setLoadingRevisi(true);
         setFormData(prev => ({ ...prev, revisi_dipa: undefined }));
         try {
             const result = await getAllDipaPok(tahun, 1);
-            const existing = (result.data || []).map((d: DipaPok) => d.revisi_dipa);
+            const existing = (result.data || [])
+                .filter((d: DipaPok) => !jnsDipa || d.jns_dipa === jnsDipa)
+                .map((d: DipaPok) => d.revisi_dipa);
             const available = SEMUA_REVISI.filter(r => !existing.includes(r));
             setRevisiOptions(available);
         } catch {

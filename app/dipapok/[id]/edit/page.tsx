@@ -51,7 +51,7 @@ export default function DipaPokEdit() {
                     setFormData(data);
                     setOriginalRevisi(data.revisi_dipa || '');
                     if (data.thn_dipa) {
-                        await loadRevisiOptions(data.thn_dipa, data.revisi_dipa || '');
+                        await loadRevisiOptions(data.thn_dipa, data.revisi_dipa || '', data.jns_dipa);
                     }
                 } else {
                     router.push('/dipapok');
@@ -64,11 +64,13 @@ export default function DipaPokEdit() {
         fetchData();
     }, [id]);
 
-    const loadRevisiOptions = async (tahun: number, currentRevisi: string) => {
+    const loadRevisiOptions = async (tahun: number, currentRevisi: string, jnsDipa?: string) => {
         setLoadingRevisi(true);
         try {
             const result = await getAllDipaPok(tahun, 1);
-            const existing = (result.data || []).map((d: DipaPok) => d.revisi_dipa);
+            const existing = (result.data || [])
+                .filter((d: DipaPok) => !jnsDipa || d.jns_dipa === jnsDipa)
+                .map((d: DipaPok) => d.revisi_dipa);
             const available = SEMUA_REVISI.filter(r => !existing.includes(r) || r === currentRevisi);
             setRevisiOptions(available);
         } catch {
@@ -80,7 +82,14 @@ export default function DipaPokEdit() {
     const handleTahunChange = async (tahun: number) => {
         setFormData(prev => ({ ...prev, thn_dipa: tahun, revisi_dipa: undefined }));
         setOriginalRevisi('');
-        await loadRevisiOptions(tahun, '');
+        await loadRevisiOptions(tahun, '', formData.jns_dipa);
+    };
+
+    const handleJenisDipaChange = async (val: string) => {
+        setFormData(prev => ({ ...prev, jns_dipa: val, revisi_dipa: undefined }));
+        if (formData.thn_dipa) {
+            await loadRevisiOptions(formData.thn_dipa, originalRevisi, val);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -157,7 +166,7 @@ export default function DipaPokEdit() {
                                 <Label htmlFor="jns_dipa">Jenis DIPA *</Label>
                                 <Select
                                     value={formData.jns_dipa || ''}
-                                    onValueChange={val => setFormData(prev => ({ ...prev, jns_dipa: val }))}
+                                    onValueChange={handleJenisDipaChange}
                                 >
                                     <SelectTrigger id="jns_dipa">
                                         <SelectValue placeholder="Pilih jenis DIPA..." />
