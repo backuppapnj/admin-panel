@@ -9,6 +9,7 @@ import {
     CalendarDays,
     FileText,
     Coins,
+    BookOpen,
     LogOut,
     ChevronUp,
     User2
@@ -76,6 +77,12 @@ const routes = [
         icon: Coins,
         href: '/anggaran',
         color: 'text-emerald-400',
+    },
+    {
+        label: 'DIPA & POK',
+        icon: BookOpen,
+        href: '/dipapok',
+        color: 'text-blue-400',
     },
 ];
 
