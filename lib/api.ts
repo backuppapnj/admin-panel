@@ -477,6 +477,20 @@ export interface PaguAnggaran {
   tahun: number;
 }
 
+export interface DipaPok {
+  id?: number;
+  kode_dipa?: number;
+  thn_dipa: number;
+  revisi_dipa: string;
+  jns_dipa: string;
+  tgl_dipa: string;
+  alokasi_dipa: number;
+  doc_dipa?: string;
+  doc_pok?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export async function getAllPagu(tahun?: number, dipa?: string): Promise<ApiResponse<PaguAnggaran[]>> {
   const qs: string[] = [];
   if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
@@ -497,6 +511,61 @@ export async function updatePagu(data: PaguAnggaran): Promise<ApiResponse<PaguAn
 
 export async function deletePagu(id: number): Promise<ApiResponse<null>> {
   const response = await fetch(`${API_URL}/pagu/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
+// API DIPA POK
+// ==========================================
+
+export async function getAllDipaPok(tahun?: number, page = 1, q?: string): Promise<ApiResponse<DipaPok[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  if (q) qs.push(`q=${encodeURIComponent(q)}`);
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/dipapok?${qs.join('&')}`;
+
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<DipaPok[]>(response);
+}
+
+export async function getDipaPok(id: number): Promise<DipaPok | null> {
+  const response = await fetch(`${API_URL}/dipapok/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<DipaPok>(response);
+  return result.data || null;
+}
+
+export async function createDipaPok(data: DipaPok | FormData): Promise<ApiResponse<DipaPok>> {
+  const isFormData = data instanceof FormData;
+  const response = await fetch(`${API_URL}/dipapok`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<DipaPok>(response);
+}
+
+export async function updateDipaPok(id: number, data: Partial<DipaPok> | FormData): Promise<ApiResponse<DipaPok>> {
+  const isFormData = data instanceof FormData;
+
+  const method = isFormData ? 'POST' : 'PUT';
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+
+  const response = await fetch(`${API_URL}/dipapok/${id}`, {
+    method: method,
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<DipaPok>(response);
+}
+
+export async function deleteDipaPok(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/dipapok/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
