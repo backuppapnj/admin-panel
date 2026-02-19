@@ -1,21 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createDipaPok, type DipaPok } from '@/lib/api';
+import { createDipaPok, getAllDipaPok, type DipaPok } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, Loader2, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from "@/components/ui/blur-fade";
 
+const JENIS_DIPA_OPTIONS = [
+    'Badan Urusan Administrasi - MARI',
+    'Direktorat Jendral Badan Peradilan Agama',
+];
+
+const SEMUA_REVISI = [
+    'Dipa Awal',
+    ...Array.from({ length: 20 }, (_, i) => `Revisi ${i + 1}`),
+];
+
 export default function DipaPokAdd() {
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [loadingRevisi, setLoadingRevisi] = useState(false);
+    const [revisiOptions, setRevisiOptions] = useState<string[]>(SEMUA_REVISI);
     const [formData, setFormData] = useState<Partial<DipaPok>>({
         thn_dipa: new Date().getFullYear(),
         tgl_dipa: new Date().toISOString().split('T')[0],
@@ -26,6 +45,26 @@ export default function DipaPokAdd() {
         file_doc_dipa: null,
         file_doc_pok: null,
     });
+
+    useEffect(() => {
+        if (formData.thn_dipa) {
+            loadRevisiOptions(formData.thn_dipa);
+        }
+    }, [formData.thn_dipa]);
+
+    const loadRevisiOptions = async (tahun: number) => {
+        setLoadingRevisi(true);
+        setFormData(prev => ({ ...prev, revisi_dipa: undefined }));
+        try {
+            const result = await getAllDipaPok(tahun, 1);
+            const existing = (result.data || []).map((d: DipaPok) => d.revisi_dipa);
+            const available = SEMUA_REVISI.filter(r => !existing.includes(r));
+            setRevisiOptions(available);
+        } catch {
+            setRevisiOptions(SEMUA_REVISI);
+        }
+        setLoadingRevisi(false);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,17 +78,13 @@ export default function DipaPokAdd() {
         try {
             const dataToSend = new FormData();
             dataToSend.append('thn_dipa', String(formData.thn_dipa));
-            dataToSend.append('revisi_dipa', formData.revisi_dipa || '');
-            dataToSend.append('jns_dipa', formData.jns_dipa || '');
-            dataToSend.append('tgl_dipa', formData.tgl_dipa || '');
+            dataToSend.append('revisi_dipa', formData.revisi_dipa);
+            dataToSend.append('jns_dipa', formData.jns_dipa);
+            dataToSend.append('tgl_dipa', formData.tgl_dipa);
             dataToSend.append('alokasi_dipa', String(formData.alokasi_dipa || 0));
 
-            if (files.file_doc_dipa) {
-                dataToSend.append('file_doc_dipa', files.file_doc_dipa);
-            }
-            if (files.file_doc_pok) {
-                dataToSend.append('file_doc_pok', files.file_doc_pok);
-            }
+            if (files.file_doc_dipa) dataToSend.append('file_doc_dipa', files.file_doc_dipa);
+            if (files.file_doc_pok) dataToSend.append('file_doc_pok', files.file_doc_pok);
 
             const result = await createDipaPok(dataToSend);
             if (result.success) {
@@ -58,7 +93,7 @@ export default function DipaPokAdd() {
             } else {
                 toast({ title: "Gagal", description: result.message || "Terjadi kesalahan", variant: "destructive" });
             }
-        } catch (error) {
+        } catch {
             toast({ variant: "destructive", title: "Gagal", description: "Terjadi kesalahan" });
         }
         setLoading(false);
@@ -107,25 +142,45 @@ export default function DipaPokAdd() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="revisi_dipa">Revisi DIPA *</Label>
-                                <Input
-                                    id="revisi_dipa"
-                                    placeholder="Contoh: DIPA Pertama, DIPA Kedua..."
-                                    value={formData.revisi_dipa || ''}
-                                    onChange={e => setFormData(prev => ({ ...prev, revisi_dipa: e.target.value }))}
-                                    required
-                                />
+                                <Label htmlFor="jns_dipa">Jenis DIPA *</Label>
+                                <Select
+                                    value={formData.jns_dipa || ''}
+                                    onValueChange={val => setFormData(prev => ({ ...prev, jns_dipa: val }))}
+                                >
+                                    <SelectTrigger id="jns_dipa">
+                                        <SelectValue placeholder="Pilih jenis DIPA..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {JENIS_DIPA_OPTIONS.map(opt => (
+                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="jns_dipa">Jenis DIPA *</Label>
-                                <Input
-                                    id="jns_dipa"
-                                    placeholder="Contoh: DIPA 01 - Belanja Pegawai..."
-                                    value={formData.jns_dipa || ''}
-                                    onChange={e => setFormData(prev => ({ ...prev, jns_dipa: e.target.value }))}
-                                    required
-                                />
+                                <Label htmlFor="revisi_dipa">Revisi DIPA *</Label>
+                                <Select
+                                    value={formData.revisi_dipa || ''}
+                                    onValueChange={val => setFormData(prev => ({ ...prev, revisi_dipa: val }))}
+                                    disabled={loadingRevisi || revisiOptions.length === 0}
+                                >
+                                    <SelectTrigger id="revisi_dipa">
+                                        <SelectValue placeholder={
+                                            loadingRevisi ? "Memuat..." :
+                                            revisiOptions.length === 0 ? "Semua revisi sudah terisi" :
+                                            "Pilih revisi..."
+                                        } />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {revisiOptions.map(opt => (
+                                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {revisiOptions.length === 0 && !loadingRevisi && (
+                                    <p className="text-xs text-amber-600">Semua revisi untuk tahun ini sudah tersimpan.</p>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -143,7 +198,7 @@ export default function DipaPokAdd() {
                                 <Label className="text-blue-700 font-bold flex items-center gap-2">
                                     <FileText className="h-4 w-4" /> Dokumen
                                 </Label>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                                     <div className="space-y-2">
                                         <Label>File Dokumen DIPA (PDF)</Label>
