@@ -10,6 +10,7 @@ import {
     FileText,
     Coins,
     BookOpen,
+    Package,
     LogOut,
     ChevronUp,
     User2
@@ -83,6 +84,12 @@ const routes = [
         icon: BookOpen,
         href: '/dipapok',
         color: 'text-blue-400',
+    },
+    {
+        label: 'Aset & BMN',
+        icon: Package,
+        href: '/aset-bmn',
+        color: 'text-teal-500',
     },
 ];
 

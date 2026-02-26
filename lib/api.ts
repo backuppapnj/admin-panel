@@ -572,3 +572,77 @@ export async function deleteDipaPok(id: number): Promise<ApiResponse<null>> {
   return normalizeApiResponse<null>(response);
 }
 
+// ==========================================
+// API ASET BMN
+// ==========================================
+
+export const JENIS_LAPORAN_BMN = [
+  'Laporan Posisi BMN Di Neraca - Semester I',
+  'Laporan Posisi BMN Di Neraca - Semester II',
+  'Laporan Posisi BMN Di Neraca - Tahunan',
+  'Laporan Barang Kuasa Pengguna - Persediaan - Semester I',
+  'Laporan Barang Kuasa Pengguna - Persediaan - Semester II',
+  'Laporan Kondisi Barang - Tahunan',
+] as const;
+
+export type JenisLaporanBmn = typeof JENIS_LAPORAN_BMN[number];
+
+export interface AsetBmn {
+  id?: number;
+  tahun: number;
+  jenis_laporan: JenisLaporanBmn;
+  link_dokumen?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllAsetBmn(tahun?: number): Promise<ApiResponse<AsetBmn[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  const url = qs.length ? `${API_URL}/aset-bmn?${qs.join('&')}` : `${API_URL}/aset-bmn`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<AsetBmn[]>(response);
+}
+
+export async function getAsetBmn(id: number): Promise<AsetBmn | null> {
+  const response = await fetch(`${API_URL}/aset-bmn/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<AsetBmn>(response);
+  return result.data || null;
+}
+
+export async function createAsetBmn(data: FormData | AsetBmn): Promise<ApiResponse<AsetBmn>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'POST';
+  const body = isFormData ? data : JSON.stringify(data);
+  const headers = isFormData ? getHeaders() : { ...getHeaders(), 'Content-Type': 'application/json' };
+
+  const response = await fetch(`${API_URL}/aset-bmn`, {
+    method,
+    headers,
+    body,
+  });
+  return normalizeApiResponse<AsetBmn>(response);
+}
+
+export async function updateAsetBmn(id: number, data: FormData | Partial<AsetBmn>): Promise<ApiResponse<AsetBmn>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'PUT';
+  const body = isFormData ? (() => { data.append('_method', 'PUT'); return data; })() : JSON.stringify(data);
+  const headers = isFormData ? getHeaders() : { ...getHeaders(), 'Content-Type': 'application/json' };
+
+  const response = await fetch(`${API_URL}/aset-bmn/${id}`, {
+    method,
+    headers,
+    body,
+  });
+  return normalizeApiResponse<AsetBmn>(response);
+}
+
+export async function deleteAsetBmn(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/aset-bmn/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
