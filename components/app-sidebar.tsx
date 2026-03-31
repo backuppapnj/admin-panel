@@ -13,7 +13,8 @@ import {
     Package,
     LogOut,
     ChevronUp,
-    User2
+    User2,
+    Target
 } from 'lucide-react';
 import {
     Sidebar,
@@ -90,6 +91,12 @@ const routes = [
         icon: Package,
         href: '/aset-bmn',
         color: 'text-teal-500',
+    },
+    {
+        label: 'SAKIP',
+        icon: Target,
+        href: '/sakip',
+        color: 'text-indigo-500',
     },
 ];
 

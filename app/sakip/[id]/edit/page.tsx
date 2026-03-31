@@ -1,0 +1,180 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { getSakip, updateSakip, JENIS_DOKUMEN_SAKIP, type Sakip } from '@/lib/api';
+import { getYearOptions } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Save, Loader2, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { BlurFade } from '@/components/ui/blur-fade';
+
+export default function SakipEdit() {
+    const router = useRouter();
+    const params = useParams();
+    const id = parseInt(params.id as string);
+    const { toast } = useToast();
+
+    const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
+    const [formData, setFormData] = useState<Partial<Sakip>>({});
+    const [fileDokumen, setFileDokumen] = useState<File | null>(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await getSakip(id);
+                if (data) {
+                    setFormData(data);
+                } else {
+                    toast({ title: 'Error', description: 'Data tidak ditemukan.', variant: 'destructive' });
+                    router.push('/sakip');
+                }
+            } catch {
+                toast({ title: 'Error', description: 'Gagal memuat data.', variant: 'destructive' });
+                router.push('/sakip');
+            }
+            setFetching(false);
+        };
+        fetchData();
+    }, [id]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const dataToSend = new FormData();
+            dataToSend.append('tahun', String(formData.tahun));
+            dataToSend.append('jenis_dokumen', String(formData.jenis_dokumen));
+            if (formData.uraian !== undefined) dataToSend.append('uraian', formData.uraian || '');
+            if (fileDokumen) dataToSend.append('file_dokumen', fileDokumen);
+
+            const result = await updateSakip(id, dataToSend);
+            if (result.success) {
+                toast({ title: 'Sukses', description: 'Data berhasil diperbarui!' });
+                router.push('/sakip');
+            } else {
+                toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Terjadi kesalahan.' });
+            }
+        } catch {
+            toast({ variant: 'destructive', title: 'Gagal', description: 'Terjadi kesalahan saat menyimpan.' });
+        }
+        setLoading(false);
+    };
+
+    if (fetching) return (
+        <div className='flex justify-center items-center h-64'>
+            <Loader2 className='h-8 w-8 animate-spin text-indigo-600' />
+        </div>
+    );
+
+    return (
+        <div className='max-w-2xl mx-auto space-y-6'>
+            <BlurFade delay={0.1} inView>
+                <div className='flex items-center gap-4'>
+                    <Link href='/sakip'><Button variant='outline' size='icon'><ArrowLeft className='h-4 w-4' /></Button></Link>
+                    <h2 className='text-2xl font-bold tracking-tight'>Edit Dokumen SAKIP</h2>
+                </div>
+            </BlurFade>
+
+            <BlurFade delay={0.2} inView>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Edit {formData.jenis_dokumen} — Tahun {formData.tahun}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit} className='space-y-4'>
+                            <div className='grid grid-cols-2 gap-4'>
+                                <div className='space-y-2'>
+                                    <Label>Tahun <span className='text-red-500'>*</span></Label>
+                                    <Select
+                                        value={String(formData.tahun || '')}
+                                        onValueChange={v => setFormData(prev => ({ ...prev, tahun: parseInt(v) }))}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {getYearOptions(2019).map(y => (
+                                                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className='space-y-2'>
+                                    <Label>Jenis Dokumen <span className='text-red-500'>*</span></Label>
+                                    <Select
+                                        value={formData.jenis_dokumen || ''}
+                                        onValueChange={v => setFormData(prev => ({ ...prev, jenis_dokumen: v as typeof JENIS_DOKUMEN_SAKIP[number] }))}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {JENIS_DOKUMEN_SAKIP.map(j => (
+                                                <SelectItem key={j} value={j}>{j}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className='space-y-2'>
+                                <Label>Uraian / Keterangan</Label>
+                                <Textarea
+                                    value={formData.uraian || ''}
+                                    onChange={e => setFormData(prev => ({ ...prev, uraian: e.target.value }))}
+                                    rows={4}
+                                />
+                            </div>
+
+                            <div className='space-y-2'>
+                                <Label>Dokumen</Label>
+                                {formData.link_dokumen && (
+                                    <div className='mb-2'>
+                                        <a
+                                            href={formData.link_dokumen}
+                                            target='_blank'
+                                            rel='noopener noreferrer'
+                                            className='inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline'
+                                        >
+                                            <ExternalLink className='h-3 w-3' />
+                                            Dokumen saat ini
+                                        </a>
+                                        <span className='text-xs text-muted-foreground ml-2'>
+                                            (Unggah file baru untuk mengganti)
+                                        </span>
+                                    </div>
+                                )}
+                                <Input
+                                    type='file'
+                                    onChange={e => setFileDokumen(e.target.files?.[0] || null)}
+                                    accept='.pdf,.doc,.docx,.jpg,.jpeg,.png'
+                                />
+                                {fileDokumen && (
+                                    <p className='text-xs text-indigo-600 font-medium'>
+                                        File baru dipilih: {fileDokumen.name}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className='pt-4 flex justify-end gap-2'>
+                                <Link href='/sakip'><Button type='button' variant='outline'>Batal</Button></Link>
+                                <Button type='submit' className='bg-indigo-600 hover:bg-indigo-700' disabled={loading}>
+                                    {loading ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : <Save className='mr-2 h-4 w-4' />}
+                                    Simpan Perubahan
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+            </BlurFade>
+        </div>
+    );
+}

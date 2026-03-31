@@ -646,3 +646,79 @@ export async function deleteAsetBmn(id: number): Promise<ApiResponse<null>> {
   return normalizeApiResponse<null>(response);
 }
 
+// ==========================================
+// API SAKIP
+// ==========================================
+
+export const JENIS_DOKUMEN_SAKIP = [
+  'Indikator Kinerja Utama',
+  'Rencana Strategis',
+  'Program Kerja',
+  'Rencana Kinerja Tahunan',
+  'Perjanjian Kinerja',
+  'Rencana Aksi',
+  'Laporan Kinerja Instansi Pemerintah',
+] as const;
+
+export type JenisDokumenSakip = typeof JENIS_DOKUMEN_SAKIP[number];
+
+export interface Sakip {
+  id?: number;
+  tahun: number;
+  jenis_dokumen: JenisDokumenSakip;
+  uraian?: string | null;
+  link_dokumen?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllSakip(tahun?: number): Promise<ApiResponse<Sakip[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  const url = qs.length ? `${API_URL}/sakip?${qs.join('&')}` : `${API_URL}/sakip`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<Sakip[]>(response);
+}
+
+export async function getSakip(id: number): Promise<Sakip | null> {
+  const response = await fetch(`${API_URL}/sakip/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<Sakip>(response);
+  return result.data || null;
+}
+
+export async function createSakip(data: FormData | Sakip): Promise<ApiResponse<Sakip>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'POST';
+  const body = isFormData ? data : JSON.stringify(data);
+  const headers = isFormData ? getHeaders() : { ...getHeaders(), 'Content-Type': 'application/json' };
+
+  const response = await fetch(`${API_URL}/sakip`, {
+    method,
+    headers,
+    body,
+  });
+  return normalizeApiResponse<Sakip>(response);
+}
+
+export async function updateSakip(id: number, data: FormData | Partial<Sakip>): Promise<ApiResponse<Sakip>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'PUT';
+  const body = isFormData ? (() => { (data as FormData).append('_method', 'PUT'); return data; })() : JSON.stringify(data);
+  const headers = isFormData ? getHeaders() : { ...getHeaders(), 'Content-Type': 'application/json' };
+
+  const response = await fetch(`${API_URL}/sakip/${id}`, {
+    method,
+    headers,
+    body,
+  });
+  return normalizeApiResponse<Sakip>(response);
+}
+
+export async function deleteSakip(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/sakip/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
