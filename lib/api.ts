@@ -697,6 +697,17 @@ export async function createSakip(data: FormData | Sakip): Promise<ApiResponse<S
     headers,
     body,
   });
+
+  // Tangkap HTTP error agar pesan dari server tetap tampil
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      msg = err?.message || msg;
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+
   return normalizeApiResponse<Sakip>(response);
 }
 
