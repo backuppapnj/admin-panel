@@ -169,14 +169,20 @@ export default function LaporanPengaduanList() {
                                                                     </TableCell>
                                                                     {BULAN_SHORT.map(b => (
                                                                         <TableCell key={b} className="text-center text-xs">
-                                                                            {row ? (row as any)[b] ?? 0 : 0}
+                                                                            {row && (row as any)[b] !== null && (row as any)[b] !== undefined
+                                                                                ? (row as any)[b]
+                                                                                : '—'}
                                                                         </TableCell>
                                                                     ))}
                                                                     <TableCell className="text-center text-xs font-semibold">
-                                                                        {row?.laporan_proses ?? 0}
+                                                                        {row?.laporan_proses !== null && row?.laporan_proses !== undefined
+                                                                            ? row.laporan_proses
+                                                                            : '—'}
                                                                     </TableCell>
                                                                     <TableCell className="text-center text-xs">
-                                                                        {row?.sisa ?? 0}
+                                                                        {row?.sisa !== null && row?.sisa !== undefined
+                                                                            ? row.sisa
+                                                                            : '—'}
                                                                     </TableCell>
                                                                     <TableCell className="text-center">
                                                                         <div className="flex justify-center gap-1">
