@@ -126,7 +126,7 @@ function SakipForm() {
                             accept='.pdf,.doc,.docx,.jpg,.jpeg,.png'
                         />
                         <p className='text-xs text-muted-foreground'>
-                            Format: PDF, DOC, DOCX, JPG, JPEG, PNG. Maks 10MB.
+                            Format: PDF, DOC, DOCX, JPG, JPEG, PNG. Maks 20MB.
                         </p>
                         {fileDokumen && (
                             <p className='text-xs text-indigo-600 font-medium'>

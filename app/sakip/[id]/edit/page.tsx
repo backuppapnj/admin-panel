@@ -157,6 +157,9 @@ export default function SakipEdit() {
                                     onChange={e => setFileDokumen(e.target.files?.[0] || null)}
                                     accept='.pdf,.doc,.docx,.jpg,.jpeg,.png'
                                 />
+                                <p className='text-xs text-muted-foreground'>
+                                    Format: PDF, DOC, DOCX, JPG, JPEG, PNG. Maks 20MB.
+                                </p>
                                 {fileDokumen && (
                                     <p className='text-xs text-indigo-600 font-medium'>
                                         File baru dipilih: {fileDokumen.name}
