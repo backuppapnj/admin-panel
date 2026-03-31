@@ -45,9 +45,9 @@ function SakipForm() {
         setLoading(true);
         try {
             const dataToSend = new FormData();
-            dataToSend.append('tahun', String(formData.tahun));
-            dataToSend.append('jenis_dokumen', formData.jenis_dokumen);
-            if (formData.uraian) dataToSend.append('uraian', formData.uraian);
+            Object.entries(formData).forEach(([key, val]) => {
+                if (val !== null && val !== undefined) dataToSend.append(key, String(val));
+            });
             if (fileDokumen) dataToSend.append('file_dokumen', fileDokumen);
 
             const result = await createSakip(dataToSend);

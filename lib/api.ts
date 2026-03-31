@@ -688,22 +688,24 @@ export async function getSakip(id: number): Promise<Sakip | null> {
 
 export async function createSakip(data: FormData | Sakip): Promise<ApiResponse<Sakip>> {
   const isFormData = data instanceof FormData;
-  const method = isFormData ? 'POST' : 'POST';
   const body = isFormData ? data : JSON.stringify(data);
-  const headers = isFormData ? getHeaders() : { ...getHeaders(), 'Content-Type': 'application/json' };
 
   const response = await fetch(`${API_URL}/sakip`, {
-    method,
-    headers,
+    method: 'POST',
+    headers: getHeaders(isFormData),
     body,
   });
 
-  // Tangkap HTTP error agar pesan dari server tetap tampil
   if (!response.ok) {
     let msg = `HTTP ${response.status}`;
     try {
       const err = await response.json();
-      msg = err?.message || msg;
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
     } catch { /* body kosong atau non-JSON */ }
     return { success: false, message: msg };
   }
@@ -713,15 +715,30 @@ export async function createSakip(data: FormData | Sakip): Promise<ApiResponse<S
 
 export async function updateSakip(id: number, data: FormData | Partial<Sakip>): Promise<ApiResponse<Sakip>> {
   const isFormData = data instanceof FormData;
-  const method = isFormData ? 'POST' : 'PUT';
-  const body = isFormData ? (() => { (data as FormData).append('_method', 'PUT'); return data; })() : JSON.stringify(data);
-  const headers = isFormData ? getHeaders() : { ...getHeaders(), 'Content-Type': 'application/json' };
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
 
   const response = await fetch(`${API_URL}/sakip/${id}`, {
-    method,
-    headers,
-    body,
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
   });
+
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+
   return normalizeApiResponse<Sakip>(response);
 }
 

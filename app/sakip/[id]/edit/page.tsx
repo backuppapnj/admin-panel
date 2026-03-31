@@ -50,9 +50,9 @@ export default function SakipEdit() {
         setLoading(true);
         try {
             const dataToSend = new FormData();
-            dataToSend.append('tahun', String(formData.tahun));
-            dataToSend.append('jenis_dokumen', String(formData.jenis_dokumen));
-            if (formData.uraian !== undefined) dataToSend.append('uraian', formData.uraian || '');
+            Object.entries(formData).forEach(([key, val]) => {
+                if (val !== null && val !== undefined) dataToSend.append(key, String(val));
+            });
             if (fileDokumen) dataToSend.append('file_dokumen', fileDokumen);
 
             const result = await updateSakip(id, dataToSend);
