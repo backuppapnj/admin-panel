@@ -14,7 +14,8 @@ import {
     LogOut,
     ChevronUp,
     User2,
-    Target
+    Target,
+    AlertTriangle
 } from 'lucide-react';
 import {
     Sidebar,
@@ -97,6 +98,12 @@ const routes = [
         icon: Target,
         href: '/sakip',
         color: 'text-indigo-500',
+    },
+    {
+        label: 'Laporan Pengaduan',
+        icon: AlertTriangle,
+        href: '/laporan-pengaduan',
+        color: 'text-amber-500',
     },
 ];
 

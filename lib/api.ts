@@ -750,3 +750,98 @@ export async function deleteSakip(id: number): Promise<ApiResponse<null>> {
   return normalizeApiResponse<null>(response);
 }
 
+// ==========================================
+// API LAPORAN PENGADUAN
+// ==========================================
+
+export const MATERI_PENGADUAN = [
+  'Pelanggaran Terhadap Kode Etik Atau Pedoman Perilaku Hakim',
+  'Penyalahgunaan Wewenang / Jabatan',
+  'Pelanggaran Terhadap Disiplin PNS',
+  'Perbuatan Tercela',
+  'Pelanggaran Hukum Acara',
+  'Kekeliruan Administrasi',
+  'Pelayanan Publik Yang Tidak Memuaskan',
+] as const;
+
+export const BULAN_LAPORAN = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nop','des'] as const;
+export const BULAN_LABELS: Record<string, string> = {
+  jan:'Jan', feb:'Feb', mar:'Mar', apr:'Apr', mei:'Mei', jun:'Jun',
+  jul:'Jul', agu:'Agu', sep:'Sep', okt:'Okt', nop:'Nop', des:'Des',
+};
+
+export type LaporanPengaduan = {
+  id?: number;
+  tahun: number;
+  materi_pengaduan: typeof MATERI_PENGADUAN[number];
+  jan?: number; feb?: number; mar?: number; apr?: number; mei?: number; jun?: number;
+  jul?: number; agu?: number; sep?: number; okt?: number; nop?: number; des?: number;
+  laporan_proses?: number; sisa?: number;
+  created_at?: string; updated_at?: string;
+};
+
+export async function getAllLaporanPengaduan(tahun?: number): Promise<ApiResponse<LaporanPengaduan[]>> {
+  const qs = tahun ? `?tahun=${encodeURIComponent(String(tahun))}` : '';
+  const response = await fetch(`${API_URL}/laporan-pengaduan${qs}`, { cache: 'no-store' });
+  return normalizeApiResponse<LaporanPengaduan[]>(response);
+}
+
+export async function getLaporanPengaduan(id: number): Promise<LaporanPengaduan | null> {
+  const response = await fetch(`${API_URL}/laporan-pengaduan/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<LaporanPengaduan>(response);
+  return result.data || null;
+}
+
+export async function createLaporanPengaduan(data: LaporanPengaduan): Promise<ApiResponse<LaporanPengaduan>> {
+  const response = await fetch(`${API_URL}/laporan-pengaduan`, {
+    method: 'POST',
+    headers: getHeaders(false),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+  return normalizeApiResponse<LaporanPengaduan>(response);
+}
+
+export async function updateLaporanPengaduan(id: number, data: Partial<LaporanPengaduan>): Promise<ApiResponse<LaporanPengaduan>> {
+  const response = await fetch(`${API_URL}/laporan-pengaduan/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(false),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+  return normalizeApiResponse<LaporanPengaduan>(response);
+}
+
+export async function deleteLaporanPengaduan(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/laporan-pengaduan/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+
