@@ -35,6 +35,9 @@ export default function LaporanPengaduanList() {
     const [filterTahun, setFilterTahun] = useState<string>('all');
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [editRow, setEditRow] = useState<LaporanPengaduan | null>(null);
+    const [addTahunOpen, setAddTahunOpen] = useState(false);
+    const [addTahun, setAddTahun] = useState<string>(String(new Date().getFullYear() + 1));
+    const [addingTahun, setAddingTahun] = useState(false);
     const { toast } = useToast();
 
     const loadData = async () => {
@@ -72,6 +75,30 @@ export default function LaporanPengaduanList() {
         loadData();
     };
 
+    const handleAddTahun = async () => {
+        const tahun = parseInt(addTahun);
+        if (!tahun) return;
+        setAddingTahun(true);
+        let errors = 0;
+        try {
+            const { createLaporanPengaduan } = await import('@/lib/api');
+            for (const materi of MATERI_PENGADUAN) {
+                const result = await createLaporanPengaduan({ tahun, materi_pengaduan: materi as typeof MATERI_PENGADUAN[number] });
+                if (!result.success) errors++;
+            }
+            if (errors === 0) {
+                toast({ title: 'Sukses', description: `Data tahun ${tahun} berhasil ditambahkan!` });
+                setAddTahunOpen(false);
+                loadData();
+            } else {
+                toast({ variant: 'destructive', title: 'Gagal', description: `${errors} data gagal ditambahkan.` });
+            }
+        } catch {
+            toast({ variant: 'destructive', title: 'Gagal', description: 'Terjadi kesalahan.' });
+        }
+        setAddingTahun(false);
+    };
+
     const handleSaveEdit = async () => {
         if (!editRow) return;
         try {
@@ -105,6 +132,9 @@ export default function LaporanPengaduanList() {
                     </div>
                     <Button variant="outline" size="sm" onClick={loadData} className="gap-2">
                         <RefreshCw className="h-4 w-4" /> Refresh
+                    </Button>
+                    <Button size="sm" className="bg-amber-600 hover:bg-amber-700 gap-1" onClick={() => setAddTahunOpen(true)}>
+                        <PlusCircle className="h-4 w-4" /> Tambah Tahun
                     </Button>
                 </div>
             </BlurFade>
@@ -289,6 +319,36 @@ export default function LaporanPengaduanList() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={addTahunOpen} onOpenChange={setAddTahunOpen}>
+                <DialogContent className="max-w-sm">
+                    <DialogTitle>Tambah Tahun Baru</DialogTitle>
+                    <div className="space-y-3 pt-2">
+                        <p className="text-sm text-muted-foreground">
+                            Akan menambahkan 7 baris data untuk tahun yang dipilih.
+                        </p>
+                        <div className="space-y-1">
+                            <Label>Tahun</Label>
+                            <Select value={addTahun} onValueChange={setAddTahun}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + 5 - i).map(y => (
+                                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter className="pt-4">
+                        <Button variant="outline" onClick={() => setAddTahunOpen(false)}>Batal</Button>
+                        <Button className="bg-amber-600 hover:bg-amber-700" onClick={handleAddTahun} disabled={addingTahun}>
+                            {addingTahun ? 'Menambahkan...' : 'Tambah'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
