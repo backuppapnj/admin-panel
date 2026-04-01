@@ -105,6 +105,12 @@ const routes = [
         href: '/laporan-pengaduan',
         color: 'text-amber-500',
     },
+    {
+        label: 'Keuangan Perkara',
+        icon: Coins,
+        href: '/keuangan-perkara',
+        color: 'text-green-500',
+    },
 ];
 
 export function AppSidebar() {

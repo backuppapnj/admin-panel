@@ -849,4 +849,80 @@ export async function deleteLaporanPengaduan(id: number): Promise<ApiResponse<nu
   return normalizeApiResponse<null>(response);
 }
 
+// ==========================================
+// API KEUANGAN PERKARA
+// ==========================================
+
+export interface KeuanganPerkara {
+  id?: number;
+  tahun: number;
+  bulan: number;
+  saldo_awal?: number | null;
+  penerimaan?: number | null;
+  pengeluaran?: number | null;
+  url_detail?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const NAMA_BULAN_KEUANGAN = [
+  '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+] as const;
+
+export async function getAllKeuanganPerkara(tahun?: number): Promise<ApiResponse<KeuanganPerkara[]>> {
+  const qs = tahun ? `?tahun=${encodeURIComponent(String(tahun))}` : '';
+  const response = await fetch(`${API_URL}/keuangan-perkara${qs}`, { cache: 'no-store' });
+  return normalizeApiResponse<KeuanganPerkara[]>(response);
+}
+
+export async function getKeuanganPerkara(id: number): Promise<KeuanganPerkara | null> {
+  const response = await fetch(`${API_URL}/keuangan-perkara/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<KeuanganPerkara>(response);
+  return result.data || null;
+}
+
+async function handleKeuanganResponse(response: Response): Promise<ApiResponse<KeuanganPerkara>> {
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+  return normalizeApiResponse<KeuanganPerkara>(response);
+}
+
+export async function createKeuanganPerkara(data: KeuanganPerkara): Promise<ApiResponse<KeuanganPerkara>> {
+  const response = await fetch(`${API_URL}/keuangan-perkara`, {
+    method: 'POST',
+    headers: getHeaders(false),
+    body: JSON.stringify(data),
+  });
+  return handleKeuanganResponse(response);
+}
+
+export async function updateKeuanganPerkara(id: number, data: Partial<KeuanganPerkara>): Promise<ApiResponse<KeuanganPerkara>> {
+  const response = await fetch(`${API_URL}/keuangan-perkara/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(false),
+    body: JSON.stringify(data),
+  });
+  return handleKeuanganResponse(response);
+}
+
+export async function deleteKeuanganPerkara(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/keuangan-perkara/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
 
