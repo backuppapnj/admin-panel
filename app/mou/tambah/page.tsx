@@ -117,7 +117,7 @@ export default function TambahMou() {
               <Input
                 id="tanggal_berakhir"
                 type="date"
-                value={formData.tanggal_berakhir}
+                value={formData.tanggal_berakhir ?? ''}
                 onChange={e => setFormData(p => ({ ...p, tanggal_berakhir: e.target.value }))}
               />
             </div>
