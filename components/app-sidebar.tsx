@@ -15,7 +15,8 @@ import {
     ChevronUp,
     User2,
     Target,
-    AlertTriangle
+    AlertTriangle,
+    Handshake,
 } from 'lucide-react';
 import {
     Sidebar,
@@ -110,6 +111,12 @@ const routes = [
         icon: Coins,
         href: '/keuangan-perkara',
         color: 'text-green-500',
+    },
+    {
+        label: 'MOU',
+        icon: Handshake,
+        href: '/mou',
+        color: 'text-blue-500',
     },
 ];
 
