@@ -899,20 +899,23 @@ async function handleKeuanganResponse(response: Response): Promise<ApiResponse<K
   return normalizeApiResponse<KeuanganPerkara>(response);
 }
 
-export async function createKeuanganPerkara(data: KeuanganPerkara): Promise<ApiResponse<KeuanganPerkara>> {
+export async function createKeuanganPerkara(data: KeuanganPerkara | FormData): Promise<ApiResponse<KeuanganPerkara>> {
+  const isFormData = data instanceof FormData;
   const response = await fetch(`${API_URL}/keuangan-perkara`, {
     method: 'POST',
-    headers: getHeaders(false),
-    body: JSON.stringify(data),
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
   });
   return handleKeuanganResponse(response);
 }
 
-export async function updateKeuanganPerkara(id: number, data: Partial<KeuanganPerkara>): Promise<ApiResponse<KeuanganPerkara>> {
+export async function updateKeuanganPerkara(id: number, data: Partial<KeuanganPerkara> | FormData): Promise<ApiResponse<KeuanganPerkara>> {
+  const isFormData = data instanceof FormData;
+  if (isFormData) (data as FormData).append('_method', 'PUT');
   const response = await fetch(`${API_URL}/keuangan-perkara/${id}`, {
-    method: 'PUT',
-    headers: getHeaders(false),
-    body: JSON.stringify(data),
+    method: isFormData ? 'POST' : 'PUT',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
   });
   return handleKeuanganResponse(response);
 }

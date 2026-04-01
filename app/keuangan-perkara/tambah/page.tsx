@@ -13,12 +13,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Upload } from 'lucide-react';
 
 export default function TambahKeuanganPerkara() {
     const router = useRouter();
     const { toast } = useToast();
     const [saving, setSaving] = useState(false);
+    const [file, setFile] = useState<File | null>(null);
 
     const [formData, setFormData] = useState<KeuanganPerkara>({
         tahun: new Date().getFullYear(),
@@ -33,7 +34,17 @@ export default function TambahKeuanganPerkara() {
         e.preventDefault();
         setSaving(true);
         try {
-            const result = await createKeuanganPerkara(formData);
+            // Kirim FormData agar bisa menyertakan file upload
+            const fd = new FormData();
+            fd.append('tahun', String(formData.tahun));
+            fd.append('bulan', String(formData.bulan));
+            if (formData.saldo_awal != null) fd.append('saldo_awal', String(formData.saldo_awal));
+            if (formData.penerimaan != null) fd.append('penerimaan', String(formData.penerimaan));
+            if (formData.pengeluaran != null) fd.append('pengeluaran', String(formData.pengeluaran));
+            if (formData.url_detail) fd.append('url_detail', formData.url_detail);
+            if (file) fd.append('file_upload', file);
+
+            const result = await createKeuanganPerkara(fd);
             if (result.success) {
                 toast({ title: 'Sukses', description: 'Data berhasil disimpan!' });
                 setTimeout(() => router.push('/keuangan-perkara'), 1200);
@@ -72,9 +83,7 @@ export default function TambahKeuanganPerkara() {
                                     value={String(formData.tahun)}
                                     onValueChange={v => setFormData(p => ({ ...p, tahun: parseInt(v) }))}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         {getYearOptions(2019).map(y => (
                                             <SelectItem key={y} value={String(y)}>{y}</SelectItem>
@@ -89,13 +98,10 @@ export default function TambahKeuanganPerkara() {
                                     onValueChange={v => setFormData(p => ({
                                         ...p,
                                         bulan: parseInt(v),
-                                        // Reset saldo_awal jika bukan Januari
                                         saldo_awal: parseInt(v) !== 1 ? null : p.saldo_awal,
                                     }))}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         {NAMA_BULAN_KEUANGAN.slice(1).map((nama, i) => (
                                             <SelectItem key={i + 1} value={String(i + 1)}>{nama}</SelectItem>
@@ -125,8 +131,7 @@ export default function TambahKeuanganPerkara() {
                             <div className="space-y-1">
                                 <Label>Penerimaan (Rp)</Label>
                                 <Input
-                                    type="number" min="0"
-                                    placeholder="0"
+                                    type="number" min="0" placeholder="0"
                                     value={formData.penerimaan ?? ''}
                                     onChange={e => setFormData(p => ({
                                         ...p, penerimaan: e.target.value ? parseInt(e.target.value) : null,
@@ -136,8 +141,7 @@ export default function TambahKeuanganPerkara() {
                             <div className="space-y-1">
                                 <Label>Pengeluaran (Rp)</Label>
                                 <Input
-                                    type="number" min="0"
-                                    placeholder="0"
+                                    type="number" min="0" placeholder="0"
                                     value={formData.pengeluaran ?? ''}
                                     onChange={e => setFormData(p => ({
                                         ...p, pengeluaran: e.target.value ? parseInt(e.target.value) : null,
@@ -146,19 +150,35 @@ export default function TambahKeuanganPerkara() {
                             </div>
                         </div>
 
-                        {/* URL Detail */}
+                        {/* Upload File */}
                         <div className="space-y-1">
-                            <Label>URL Detail (PDF)</Label>
-                            <Input
-                                type="text"
-                                placeholder="https://... atau images/..."
-                                value={formData.url_detail ?? ''}
-                                onChange={e => setFormData(p => ({
-                                    ...p, url_detail: e.target.value || null,
-                                }))}
-                            />
-                            <p className="text-xs text-muted-foreground">Opsional. Link ke dokumen PDF laporan bulanan.</p>
+                            <Label>Upload Dokumen (PDF/Gambar)</Label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                    onChange={e => setFile(e.target.files?.[0] || null)}
+                                    className="cursor-pointer"
+                                />
+                                <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">File akan diupload ke Google Drive. Format: PDF, Gambar. Maks 10MB.</p>
                         </div>
+
+                        {/* URL Manual (opsional jika tidak upload file) */}
+                        {!file && (
+                            <div className="space-y-1">
+                                <Label>Atau URL Manual</Label>
+                                <Input
+                                    type="text"
+                                    placeholder="https://drive.google.com/..."
+                                    value={formData.url_detail ?? ''}
+                                    onChange={e => setFormData(p => ({
+                                        ...p, url_detail: e.target.value || null,
+                                    }))}
+                                />
+                            </div>
+                        )}
 
                         <div className="flex gap-3 pt-2">
                             <Button type="submit" disabled={saving} className="gap-2">

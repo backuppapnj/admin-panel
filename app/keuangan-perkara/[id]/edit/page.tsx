@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Upload, ExternalLink } from 'lucide-react';
 
 export default function EditKeuanganPerkara() {
     const router = useRouter();
@@ -24,8 +24,8 @@ export default function EditKeuanganPerkara() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState<KeuanganPerkara | null>(null);
+    const [file, setFile] = useState<File | null>(null);
 
-    // Ambil data berdasarkan ID saat halaman dimuat
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -50,12 +50,27 @@ export default function EditKeuanganPerkara() {
         if (!formData?.id) return;
         setSaving(true);
         try {
-            const result = await updateKeuanganPerkara(formData.id, {
-                saldo_awal:  formData.saldo_awal,
-                penerimaan:  formData.penerimaan,
-                pengeluaran: formData.pengeluaran,
-                url_detail:  formData.url_detail,
-            });
+            let payload: FormData | Partial<KeuanganPerkara>;
+
+            if (file) {
+                // Ada file baru — kirim sebagai FormData
+                const fd = new FormData();
+                if (formData.saldo_awal != null) fd.append('saldo_awal', String(formData.saldo_awal));
+                if (formData.penerimaan != null) fd.append('penerimaan', String(formData.penerimaan));
+                if (formData.pengeluaran != null) fd.append('pengeluaran', String(formData.pengeluaran));
+                fd.append('file_upload', file);
+                payload = fd;
+            } else {
+                // Tidak ada file — kirim JSON biasa
+                payload = {
+                    saldo_awal:  formData.saldo_awal,
+                    penerimaan:  formData.penerimaan,
+                    pengeluaran: formData.pengeluaran,
+                    url_detail:  formData.url_detail,
+                };
+            }
+
+            const result = await updateKeuanganPerkara(formData.id, payload);
             if (result.success) {
                 toast({ title: 'Sukses', description: 'Data berhasil diperbarui!' });
                 setTimeout(() => router.push('/keuangan-perkara'), 1200);
@@ -98,17 +113,12 @@ export default function EditKeuanganPerkara() {
                         </div>
                     ) : formData ? (
                         <form onSubmit={handleSubmit} className="space-y-5">
-                            {/* Tahun & Bulan — read-only karena merupakan identifier */}
+                            {/* Tahun & Bulan — read-only, merupakan identifier unik */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <Label>Tahun</Label>
-                                    <Select
-                                        value={String(formData.tahun)}
-                                        disabled
-                                    >
-                                        <SelectTrigger className="bg-muted/50">
-                                            <SelectValue />
-                                        </SelectTrigger>
+                                    <Select value={String(formData.tahun)} disabled>
+                                        <SelectTrigger className="bg-muted/50"><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             {getYearOptions(2019).map(y => (
                                                 <SelectItem key={y} value={String(y)}>{y}</SelectItem>
@@ -119,13 +129,8 @@ export default function EditKeuanganPerkara() {
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Bulan</Label>
-                                    <Select
-                                        value={String(formData.bulan)}
-                                        disabled
-                                    >
-                                        <SelectTrigger className="bg-muted/50">
-                                            <SelectValue />
-                                        </SelectTrigger>
+                                    <Select value={String(formData.bulan)} disabled>
+                                        <SelectTrigger className="bg-muted/50"><SelectValue /></SelectTrigger>
                                         <SelectContent>
                                             {NAMA_BULAN_KEUANGAN.slice(1).map((nama, i) => (
                                                 <SelectItem key={i + 1} value={String(i + 1)}>{nama}</SelectItem>
@@ -156,8 +161,7 @@ export default function EditKeuanganPerkara() {
                                 <div className="space-y-1">
                                     <Label>Penerimaan (Rp)</Label>
                                     <Input
-                                        type="number" min="0"
-                                        placeholder="0"
+                                        type="number" min="0" placeholder="0"
                                         value={formData.penerimaan ?? ''}
                                         onChange={e => setFormData(p => p ? {
                                             ...p, penerimaan: e.target.value ? parseInt(e.target.value) : null,
@@ -167,8 +171,7 @@ export default function EditKeuanganPerkara() {
                                 <div className="space-y-1">
                                     <Label>Pengeluaran (Rp)</Label>
                                     <Input
-                                        type="number" min="0"
-                                        placeholder="0"
+                                        type="number" min="0" placeholder="0"
                                         value={formData.pengeluaran ?? ''}
                                         onChange={e => setFormData(p => p ? {
                                             ...p, pengeluaran: e.target.value ? parseInt(e.target.value) : null,
@@ -177,19 +180,57 @@ export default function EditKeuanganPerkara() {
                                 </div>
                             </div>
 
-                            {/* URL Detail */}
+                            {/* Dokumen saat ini */}
+                            {formData.url_detail && !file && (
+                                <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-md text-sm">
+                                    <ExternalLink className="h-4 w-4 text-blue-600 shrink-0" />
+                                    <span className="text-blue-700 font-medium">Dokumen saat ini:</span>
+                                    <a
+                                        href={formData.url_detail}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline truncate"
+                                    >
+                                        Lihat PDF
+                                    </a>
+                                </div>
+                            )}
+
+                            {/* Upload file baru */}
                             <div className="space-y-1">
-                                <Label>URL Detail (PDF)</Label>
-                                <Input
-                                    type="text"
-                                    placeholder="https://... atau images/..."
-                                    value={formData.url_detail ?? ''}
-                                    onChange={e => setFormData(p => p ? {
-                                        ...p, url_detail: e.target.value || null,
-                                    } : null)}
-                                />
-                                <p className="text-xs text-muted-foreground">Opsional. Link ke dokumen PDF laporan bulanan.</p>
+                                <Label>
+                                    {formData.url_detail ? 'Ganti Dokumen (PDF/Gambar)' : 'Upload Dokumen (PDF/Gambar)'}
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="file"
+                                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                        onChange={e => setFile(e.target.files?.[0] || null)}
+                                        className="cursor-pointer"
+                                    />
+                                    <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {formData.url_detail
+                                        ? 'Upload file baru akan menggantikan dokumen yang ada. Format: PDF, Gambar. Maks 10MB.'
+                                        : 'File akan diupload ke Google Drive. Format: PDF, Gambar. Maks 10MB.'}
+                                </p>
                             </div>
+
+                            {/* URL manual — hanya tampil jika tidak ada file dipilih */}
+                            {!file && (
+                                <div className="space-y-1">
+                                    <Label>Atau URL Manual</Label>
+                                    <Input
+                                        type="text"
+                                        placeholder="https://drive.google.com/..."
+                                        value={formData.url_detail ?? ''}
+                                        onChange={e => setFormData(p => p ? {
+                                            ...p, url_detail: e.target.value || null,
+                                        } : null)}
+                                    />
+                                </div>
+                            )}
 
                             <div className="flex gap-3 pt-2">
                                 <Button type="submit" disabled={saving} className="gap-2">
