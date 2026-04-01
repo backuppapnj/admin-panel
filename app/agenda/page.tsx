@@ -51,6 +51,8 @@ export default function AgendaList() {
   const [filterTahun, setFilterTahun] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  const PER_PAGE = 10;
+
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -61,7 +63,7 @@ export default function AgendaList() {
     setLoading(true);
     try {
       const year = filterTahun !== 'all' ? parseInt(filterTahun) : undefined;
-      const result = await getAllAgenda(year, undefined, page);
+      const result = await getAllAgenda(year, undefined, page, PER_PAGE);
 
       if (result.success && result.data) {
         setData(result.data);
@@ -199,7 +201,7 @@ export default function AgendaList() {
                   ) : (
                     data.map((item, idx) => (
                       <TableRow key={item.id}>
-                        <TableCell className="text-center">{(pagination.current_page - 1) * 5 + idx + 1}</TableCell>
+                        <TableCell className="text-center">{(pagination.current_page - 1) * PER_PAGE + idx + 1}</TableCell>
                         <TableCell className="font-medium">{formatTanggalISO(item.tanggal_agenda)}</TableCell>
                         <TableCell className="text-muted-foreground">{truncateText(item.isi_agenda)}</TableCell>
                         <TableCell className="text-right">

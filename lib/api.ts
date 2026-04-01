@@ -285,11 +285,12 @@ export async function deletePanggilanEcourt(id: number): Promise<ApiResponse<nul
 // API AGENDA PIMPINAN
 // ==========================================
 
-export async function getAllAgenda(tahun?: number, bulan?: string, page = 1): Promise<ApiResponse<AgendaPimpinan[]>> {
+export async function getAllAgenda(tahun?: number, bulan?: string, page = 1, perPage: number | 'all' = 10): Promise<ApiResponse<AgendaPimpinan[]>> {
   const qs: string[] = [];
   if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
   if (bulan) qs.push(`bulan=${encodeURIComponent(bulan)}`);
   qs.push(`page=${page}`);
+  qs.push(`per_page=${encodeURIComponent(String(perPage))}`);
   const url = `${API_URL}/agenda?${qs.join('&')}`;
 
   const response = await fetch(url, { cache: 'no-store' });
