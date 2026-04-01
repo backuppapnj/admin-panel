@@ -934,4 +934,69 @@ export async function deleteKeuanganPerkara(id: number): Promise<ApiResponse<nul
   return normalizeApiResponse<null>(response);
 }
 
+// ==========================================
+// API MOU
+// ==========================================
+
+export interface Mou {
+  id?: number;
+  tanggal: string;
+  instansi: string;
+  tentang: string;
+  tanggal_berakhir?: string | null;
+  link_dokumen?: string | null;
+  tahun: number;
+  status?: string;
+  sisa_hari?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllMou(tahun?: number, page = 1): Promise<ApiResponse<Mou[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/mou?${qs.join('&')}`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<Mou[]>(response);
+}
+
+export async function getMou(id: number): Promise<Mou | null> {
+  const response = await fetch(`${API_URL}/mou/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<Mou>(response);
+  return result.data || null;
+}
+
+export async function createMou(data: Mou | FormData): Promise<ApiResponse<Mou>> {
+  const isFormData = data instanceof FormData;
+  const response = await fetch(`${API_URL}/mou`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<Mou>(response);
+}
+
+export async function updateMou(id: number, data: Partial<Mou> | FormData): Promise<ApiResponse<Mou>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'PUT';
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+  const response = await fetch(`${API_URL}/mou/${id}`, {
+    method,
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<Mou>(response);
+}
+
+export async function deleteMou(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/mou/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
 
