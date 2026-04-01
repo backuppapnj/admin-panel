@@ -129,7 +129,7 @@ export default function LraList() {
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight">Laporan Realisasi Anggaran</h2>
-                        <p className="text-muted-foreground">Kelola dokumen LRA per triwulan.</p>
+                        <p className="text-muted-foreground">Kelola dokumen LRA per periode.</p>
                     </div>
                     <Link href="/lra/tambah">
                         <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-md">
@@ -168,7 +168,7 @@ export default function LraList() {
                                         <TableHead className="w-[50px] text-center">No</TableHead>
                                         <TableHead>Tahun</TableHead>
                                         <TableHead>Jenis DIPA</TableHead>
-                                        <TableHead>Triwulan</TableHead>
+                                        <TableHead>Periode</TableHead>
                                         <TableHead>Judul</TableHead>
                                         <TableHead>Cover</TableHead>
                                         <TableHead className="text-right">Aksi</TableHead>
@@ -201,7 +201,9 @@ export default function LraList() {
                                                 </TableCell>
                                                 <TableCell className="font-medium">{item.tahun}</TableCell>
                                                 <TableCell>{item.jenis_dipa}</TableCell>
-                                                <TableCell>Triwulan {item.triwulan}</TableCell>
+                                                <TableCell>{
+                                                    { semester_1: 'Semester 1', semester_2: 'Semester 2', unaudited: 'Unaudited', audited: 'Audited' }[item.periode] || item.periode
+                                                }</TableCell>
                                                 <TableCell>
                                                     {item.file_url ? (
                                                         <a

@@ -1080,7 +1080,7 @@ export interface LraReport {
   id?: number;
   tahun: number;
   jenis_dipa: string;
-  triwulan: number;
+  periode: string;
   judul: string;
   file_url?: string;
   cover_url?: string | null;

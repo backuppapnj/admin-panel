@@ -22,7 +22,7 @@ export default function TambahLra() {
     const [formData, setFormData] = useState<LraReport>({
         tahun: new Date().getFullYear(),
         jenis_dipa: '',
-        triwulan: 1,
+        periode: '',
         judul: '',
     });
     const [file, setFile] = useState<File | null>(null);
@@ -40,6 +40,10 @@ export default function TambahLra() {
             toast({ variant: "destructive", title: "Validasi", description: "Jenis DIPA wajib dipilih." });
             return;
         }
+        if (!formData.periode) {
+            toast({ variant: "destructive", title: "Validasi", description: "Periode wajib dipilih." });
+            return;
+        }
         if (!file) {
             toast({ variant: "destructive", title: "Validasi", description: "File PDF wajib diupload." });
             return;
@@ -51,7 +55,7 @@ export default function TambahLra() {
             const dataToSend = new FormData();
             dataToSend.append('tahun', String(formData.tahun));
             dataToSend.append('jenis_dipa', formData.jenis_dipa);
-            dataToSend.append('triwulan', String(formData.triwulan));
+            dataToSend.append('periode', formData.periode);
             dataToSend.append('judul', formData.judul);
             dataToSend.append('file_upload', file);
 
@@ -97,7 +101,7 @@ export default function TambahLra() {
             <Card>
                 <CardHeader>
                     <CardTitle>Formulir LRA</CardTitle>
-                    <CardDescription>Isi detail laporan realisasi anggaran per triwulan.</CardDescription>
+                    <CardDescription>Isi detail laporan realisasi anggaran per periode.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -137,19 +141,19 @@ export default function TambahLra() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="triwulan">Triwulan *</Label>
+                                <Label htmlFor="periode">Periode *</Label>
                                 <Select
-                                    value={formData.triwulan.toString()}
-                                    onValueChange={(val) => setFormData(prev => ({ ...prev, triwulan: parseInt(val) }))}
+                                    value={formData.periode}
+                                    onValueChange={(val) => setFormData(prev => ({ ...prev, periode: val }))}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Pilih Triwulan" />
+                                        <SelectValue placeholder="Pilih Periode" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1">Triwulan 1</SelectItem>
-                                        <SelectItem value="2">Triwulan 2</SelectItem>
-                                        <SelectItem value="3">Triwulan 3</SelectItem>
-                                        <SelectItem value="4">Triwulan 4</SelectItem>
+                                        <SelectItem value="semester_1">Semester 1</SelectItem>
+                                        <SelectItem value="semester_2">Semester 2</SelectItem>
+                                        <SelectItem value="unaudited">Unaudited</SelectItem>
+                                        <SelectItem value="audited">Audited</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -162,7 +166,7 @@ export default function TambahLra() {
                                 name="judul"
                                 value={formData.judul}
                                 onChange={handleChange}
-                                placeholder="Contoh: LRA DIPA 01 Triwulan 1 Tahun 2025"
+                                placeholder="Contoh: LRA Semester 1 DIPA 01 Tahun 2025"
                                 required
                             />
                         </div>

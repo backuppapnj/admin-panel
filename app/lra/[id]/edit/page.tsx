@@ -27,7 +27,7 @@ export default function EditLra() {
     const [formData, setFormData] = useState<LraReport>({
         tahun: new Date().getFullYear(),
         jenis_dipa: '',
-        triwulan: 1,
+        periode: '',
         judul: '',
     });
 
@@ -83,7 +83,7 @@ export default function EditLra() {
             const dataToSend = new FormData();
             dataToSend.append('tahun', String(formData.tahun));
             dataToSend.append('jenis_dipa', formData.jenis_dipa);
-            dataToSend.append('triwulan', String(formData.triwulan));
+            dataToSend.append('periode', formData.periode);
             dataToSend.append('judul', formData.judul);
 
             if (file) {
@@ -180,19 +180,19 @@ export default function EditLra() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="triwulan">Triwulan *</Label>
+                                <Label htmlFor="periode">Periode *</Label>
                                 <Select
-                                    value={formData.triwulan.toString()}
-                                    onValueChange={(val) => setFormData(prev => ({ ...prev, triwulan: parseInt(val) }))}
+                                    value={formData.periode}
+                                    onValueChange={(val) => setFormData(prev => ({ ...prev, periode: val }))}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Pilih Triwulan" />
+                                        <SelectValue placeholder="Pilih Periode" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1">Triwulan 1</SelectItem>
-                                        <SelectItem value="2">Triwulan 2</SelectItem>
-                                        <SelectItem value="3">Triwulan 3</SelectItem>
-                                        <SelectItem value="4">Triwulan 4</SelectItem>
+                                        <SelectItem value="semester_1">Semester 1</SelectItem>
+                                        <SelectItem value="semester_2">Semester 2</SelectItem>
+                                        <SelectItem value="unaudited">Unaudited</SelectItem>
+                                        <SelectItem value="audited">Audited</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
