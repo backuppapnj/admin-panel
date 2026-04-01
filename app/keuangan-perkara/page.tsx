@@ -95,12 +95,6 @@ export default function KeuanganPerkaraList() {
     const getSaldoAwal = (tahun: number) =>
         data.find(d => d.tahun === tahun && d.bulan === 1)?.saldo_awal;
 
-    const totalPenerimaan = (tahun: number) =>
-        data.filter(d => d.tahun === tahun).reduce((s, d) => s + (d.penerimaan || 0), 0);
-
-    const totalPengeluaran = (tahun: number) =>
-        data.filter(d => d.tahun === tahun).reduce((s, d) => s + (d.pengeluaran || 0), 0);
-
     return (
         <div className="space-y-6">
             <BlurFade delay={0.1} inView>
@@ -223,13 +217,6 @@ export default function KeuanganPerkaraList() {
                                                                     </TableCell>
                                                                 </TableRow>
                                                             ))}
-                                                        {/* Baris total */}
-                                                        <TableRow className="bg-muted/50 font-semibold">
-                                                            <TableCell colSpan={2} className="text-right text-xs">Total</TableCell>
-                                                            <TableCell className="text-right text-sm tabular-nums">{formatRupiah(totalPenerimaan(thn))}</TableCell>
-                                                            <TableCell className="text-right text-sm tabular-nums">{formatRupiah(totalPengeluaran(thn))}</TableCell>
-                                                            <TableCell colSpan={2} />
-                                                        </TableRow>
                                                     </TableBody>
                                                 </Table>
                                             </div>
