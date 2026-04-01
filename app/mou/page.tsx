@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAllMou, deleteMou, updateMou, type Mou } from '@/lib/api';
+import { getAllMou, deleteMou, type Mou } from '@/lib/api';
 import { getYearOptions } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
