@@ -65,6 +65,10 @@ const normalizeApiResponse = async <T>(response: Response): Promise<ApiResponse<
       success: ok,
       data: json.data as T | undefined,
       message: json.message,
+      total: json.total,
+      current_page: json.current_page,
+      last_page: json.last_page,
+      per_page: json.per_page,
     };
   }
 
