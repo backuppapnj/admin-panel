@@ -1072,4 +1072,72 @@ export async function deleteMou(id: number): Promise<ApiResponse<null>> {
   return normalizeApiResponse<null>(response);
 }
 
+// ==========================================
+// API LRA (LAPORAN REALISASI ANGGARAN)
+// ==========================================
+
+export interface LraReport {
+  id?: number;
+  tahun: number;
+  jenis_dipa: string;
+  triwulan: number;
+  judul: string;
+  file_url?: string;
+  cover_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// GET - Ambil semua data LRA
+export async function getAllLra(tahun?: number, page = 1): Promise<ApiResponse<LraReport[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/lra?${qs.join('&')}`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return response.json();
+}
+
+// GET - Ambil satu data LRA
+export async function getLra(id: number): Promise<LraReport | null> {
+  const response = await fetch(`${API_URL}/lra/${id}`);
+  const result: ApiResponse<LraReport> = await response.json();
+  return result.data || null;
+}
+
+// POST - Tambah data LRA baru
+export async function createLra(data: LraReport | FormData): Promise<ApiResponse<LraReport>> {
+  const isFormData = data instanceof FormData;
+  const response = await fetch(`${API_URL}/lra`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return response.json();
+}
+
+// PUT - Update data LRA
+export async function updateLra(id: number, data: Partial<LraReport> | FormData): Promise<ApiResponse<LraReport>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'PUT';
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+  const response = await fetch(`${API_URL}/lra/${id}`, {
+    method,
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return response.json();
+}
+
+// DELETE - Hapus data LRA
+export async function deleteLra(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/lra/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return response.json();
+}
+
 

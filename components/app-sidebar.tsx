@@ -18,6 +18,7 @@ import {
     AlertTriangle,
     Handshake,
     Wallet,
+    FileBarChart,
 } from 'lucide-react';
 import {
     Sidebar,
@@ -124,6 +125,12 @@ const routes = [
         icon: Handshake,
         href: '/mou',
         color: 'text-blue-500',
+    },
+    {
+        label: 'LRA',
+        icon: FileBarChart,
+        href: '/lra',
+        color: 'text-cyan-500',
     },
 ];
 
