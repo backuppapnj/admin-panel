@@ -935,6 +935,79 @@ export async function deleteKeuanganPerkara(id: number): Promise<ApiResponse<nul
 }
 
 // ==========================================
+// API SISA PANJAR
+// ==========================================
+
+export type StatusSisaPanjar = 'belum_diambil' | 'disetor_kas_negara';
+
+export interface SisaPanjar {
+  id?: number;
+  tahun: number;
+  bulan: number;
+  nomor_perkara: string;
+  nama_penggugat_pemohon: string;
+  jumlah_sisa_panjar: number;
+  status: StatusSisaPanjar;
+  tanggal_setor_kas_negara?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const NAMA_BULAN = [
+  '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+] as const;
+
+export async function getAllSisaPanjar(
+  tahun?: number,
+  status?: StatusSisaPanjar,
+  bulan?: number,
+  page = 1
+): Promise<ApiResponse<SisaPanjar[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  if (status) qs.push(`status=${encodeURIComponent(status)}`);
+  if (bulan) qs.push(`bulan=${encodeURIComponent(String(bulan))}`);
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/sisa-panjar?${qs.join('&')}`;
+
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<SisaPanjar[]>(response);
+}
+
+export async function getSisaPanjar(id: number): Promise<SisaPanjar | null> {
+  const response = await fetch(`${API_URL}/sisa-panjar/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<SisaPanjar>(response);
+  return result.data || null;
+}
+
+export async function createSisaPanjar(data: SisaPanjar): Promise<ApiResponse<SisaPanjar>> {
+  const response = await fetch(`${API_URL}/sisa-panjar`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<SisaPanjar>(response);
+}
+
+export async function updateSisaPanjar(id: number, data: Partial<SisaPanjar>): Promise<ApiResponse<SisaPanjar>> {
+  const response = await fetch(`${API_URL}/sisa-panjar/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<SisaPanjar>(response);
+}
+
+export async function deleteSisaPanjar(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/sisa-panjar/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
 // API MOU
 // ==========================================
 

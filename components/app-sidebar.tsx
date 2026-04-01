@@ -17,6 +17,7 @@ import {
     Target,
     AlertTriangle,
     Handshake,
+    Wallet,
 } from 'lucide-react';
 import {
     Sidebar,
@@ -111,6 +112,12 @@ const routes = [
         icon: Coins,
         href: '/keuangan-perkara',
         color: 'text-green-500',
+    },
+    {
+        label: 'Sisa Panjar',
+        icon: Wallet,
+        href: '/sisa-panjar',
+        color: 'text-orange-500',
     },
     {
         label: 'MOU',

@@ -14,3 +14,12 @@ export function getYearOptions(startYear: number = 2018): number[] {
   }
   return years;
 }
+
+export function formatRupiah(amount: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
