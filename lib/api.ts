@@ -883,17 +883,23 @@ export async function getKeuanganPerkara(id: number): Promise<KeuanganPerkara | 
 }
 
 async function handleKeuanganResponse(response: Response): Promise<ApiResponse<KeuanganPerkara>> {
+  console.log('API Response status:', response.status, response.statusText);
   if (!response.ok) {
     let msg = `HTTP ${response.status}`;
     try {
-      const err = await response.json();
+      const text = await response.text();
+      console.log('Error response body:', text);
+      const err = JSON.parse(text);
       if (err?.errors && typeof err.errors === 'object') {
         const firstField = Object.keys(err.errors)[0];
         msg = err.errors[firstField]?.[0] || err?.message || msg;
       } else {
         msg = err?.message || msg;
       }
-    } catch { /* body kosong atau non-JSON */ }
+    } catch (e) { 
+      console.log('Failed to parse error response:', e);
+      /* body kosong atau non-JSON */ 
+    }
     return { success: false, message: msg };
   }
   return normalizeApiResponse<KeuanganPerkara>(response);

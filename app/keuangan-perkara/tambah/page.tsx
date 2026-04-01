@@ -51,8 +51,13 @@ export default function TambahKeuanganPerkara() {
             } else {
                 toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Gagal menyimpan data.' });
             }
-        } catch {
-            toast({ variant: 'destructive', title: 'Error', description: 'Terjadi kesalahan. Pastikan API terhubung.' });
+        } catch (error: any) {
+            console.error('Save error:', error);
+            toast({ 
+                variant: 'destructive', 
+                title: 'Error', 
+                description: error?.message || 'Terjadi kesalahan. Pastikan API terhubung.' 
+            });
         }
         setSaving(false);
     };
