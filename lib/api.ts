@@ -1141,3 +1141,92 @@ export async function deleteLra(id: number): Promise<ApiResponse<null>> {
 }
 
 
+}
+
+// ==========================================
+// API MEDIASI
+// ==========================================
+
+export interface MediasiSk {
+  id?: number;
+  tahun: number;
+  link_sk_hakim?: string | null;
+  link_sk_non_hakim?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MediatorBanner {
+  id?: number;
+  judul: string;
+  image_url: string;
+  type: 'hakim' | 'non-hakim';
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Mediasi SK Functions
+export async function getAllMediasiSk(): Promise<ApiResponse<MediasiSk[]>> {
+  const response = await fetch(`${API_URL}/mediasi-sk`, { cache: 'no-store' });
+  return normalizeApiResponse<MediasiSk[]>(response);
+}
+
+export async function createMediasiSk(data: FormData): Promise<ApiResponse<MediasiSk>> {
+  const response = await fetch(`${API_URL}/mediasi-sk`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: data,
+  });
+  return normalizeApiResponse<MediasiSk>(response);
+}
+
+export async function updateMediasiSk(id: number, data: FormData): Promise<ApiResponse<MediasiSk>> {
+  data.append('_method', 'PUT');
+  const response = await fetch(`${API_URL}/mediasi-sk/${id}`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: data,
+  });
+  return normalizeApiResponse<MediasiSk>(response);
+}
+
+export async function deleteMediasiSk(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/mediasi-sk/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// Mediator Banner Functions
+export async function getAllMediatorBanners(): Promise<ApiResponse<MediatorBanner[]>> {
+  const response = await fetch(`${API_URL}/mediator-banners`, { cache: 'no-store' });
+  return normalizeApiResponse<MediatorBanner[]>(response);
+}
+
+export async function createMediatorBanner(data: FormData): Promise<ApiResponse<MediatorBanner>> {
+  const response = await fetch(`${API_URL}/mediator-banners`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: data,
+  });
+  return normalizeApiResponse<MediatorBanner>(response);
+}
+
+export async function updateMediatorBanner(id: number, data: FormData): Promise<ApiResponse<MediatorBanner>> {
+  data.append('_method', 'PUT');
+  const response = await fetch(`${API_URL}/mediator-banners/${id}`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: data,
+  });
+  return normalizeApiResponse<MediatorBanner>(response);
+}
+
+export async function deleteMediatorBanner(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/mediator-banners/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}

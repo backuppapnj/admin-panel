@@ -1,0 +1,111 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createMediasiSk } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { BlurFade } from '@/components/ui/blur-fade';
+import { ChevronLeft, Save, FileUp } from 'lucide-react';
+import Link from 'next/link';
+
+export default function AddMediasiSk() {
+    const [loading, setLoading] = useState(false);
+    const router = useRouter();
+    const { toast } = useToast();
+
+    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setLoading(true);
+        const formData = new FormData(e.currentTarget);
+
+        try {
+            const result = await createMediasiSk(formData);
+            if (result.success) {
+                toast({ title: 'Sukses', description: 'SK Mediasi berhasil ditambahkan!' });
+                router.push('/mediasi');
+            } else {
+                toast({ variant: 'destructive', title: 'Gagal', description: result.message });
+            }
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Terjadi kesalahan sistem.' });
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return (
+        <div className="max-w-2xl mx-auto space-y-6">
+            <BlurFade delay={0.1} inView>
+                <div className="flex items-center gap-4">
+                    <Link href="/mediasi">
+                        <Button variant="ghost" size="icon">
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <h2 className="text-3xl font-bold tracking-tight">Tambah SK Mediasi</h2>
+                </div>
+            </BlurFade>
+
+            <BlurFade delay={0.2} inView>
+                <form onSubmit={onSubmit}>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Form Data SK</CardTitle>
+                            <CardDescription>Input SK Hakim dan Non-Hakim untuk tahun tertentu.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="tahun">Tahun</Label>
+                                <Input type="number" id="tahun" name="tahun" placeholder="Contoh: 2024" required defaultValue={new Date().getFullYear()} />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                                <div className="space-y-3 p-4 border rounded-lg bg-slate-50/50">
+                                    <div className="flex items-center gap-2 text-indigo-700 font-semibold">
+                                        <FileUp className="h-4 w-4" /> SK Hakim
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="file_sk_hakim">File PDF (Opsional)</Label>
+                                        <Input type="file" id="file_sk_hakim" name="file_sk_hakim" accept=".pdf" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="link_sk_hakim">Atau Link Google Drive (Opsional)</Label>
+                                        <Input type="text" id="link_sk_hakim" name="link_sk_hakim" placeholder="https://drive.google.com/..." />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 p-4 border rounded-lg bg-slate-50/50">
+                                    <div className="flex items-center gap-2 text-indigo-700 font-semibold">
+                                        <FileUp className="h-4 w-4" /> SK Non-Hakim
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="file_sk_non_hakim">File PDF (Opsional)</Label>
+                                        <Input type="file" id="file_sk_non_hakim" name="file_sk_non_hakim" accept=".pdf" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="link_sk_non_hakim">Atau Link Google Drive (Opsional)</Label>
+                                        <Input type="text" id="link_sk_non_hakim" name="link_sk_non_hakim" placeholder="https://drive.google.com/..." />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-6 flex justify-end gap-3">
+                                <Link href="/mediasi">
+                                    <Button variant="ghost" type="button">Batal</Button>
+                                </Link>
+                                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 w-[150px]" disabled={loading}>
+                                    {loading ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                    Simpan
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </form>
+            </BlurFade>
+        </div>
+    );
+}

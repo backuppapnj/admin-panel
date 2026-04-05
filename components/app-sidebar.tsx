@@ -132,6 +132,12 @@ const routes = [
         href: '/lra',
         color: 'text-cyan-500',
     },
+    {
+        label: 'Mediasi',
+        icon: Handshake,
+        href: '/mediasi',
+        color: 'text-amber-600',
+    },
 ];
 
 export function AppSidebar() {
