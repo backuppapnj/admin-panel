@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BlurFade } from '@/components/ui/blur-fade';
-import { ChevronLeft, Save, FileUp } from 'lucide-react';
+import { ChevronLeft, Save, RefreshCw, FileUp } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AddMediasiSk() {

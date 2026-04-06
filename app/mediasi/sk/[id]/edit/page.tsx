@@ -18,7 +18,7 @@ export default function EditMediasiSk() {
     const [data, setData] = useState<MediasiSk | null>(null);
     const router = useRouter();
     const params = useParams();
-    const id = params.id as string;
+    const id = parseInt(params.id as string);
     const { toast } = useToast();
 
     useEffect(() => {

@@ -20,7 +20,7 @@ export default function EditMediatorBanner() {
     const [type, setType] = useState<'hakim' | 'non-hakim'>('hakim');
     const router = useRouter();
     const params = useParams();
-    const id = params.id as string;
+    const id = parseInt(params.id as string);
     const { toast } = useToast();
 
     useEffect(() => {

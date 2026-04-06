@@ -1141,8 +1141,6 @@ export async function deleteLra(id: number): Promise<ApiResponse<null>> {
 }
 
 
-}
-
 // ==========================================
 // API MEDIASI
 // ==========================================
@@ -1169,6 +1167,12 @@ export interface MediatorBanner {
 export async function getAllMediasiSk(): Promise<ApiResponse<MediasiSk[]>> {
   const response = await fetch(`${API_URL}/mediasi-sk`, { cache: 'no-store' });
   return normalizeApiResponse<MediasiSk[]>(response);
+}
+
+export async function getMediasiSk(id: number): Promise<MediasiSk | null> {
+  const response = await fetch(`${API_URL}/mediasi-sk/${id}`);
+  const result: ApiResponse<MediasiSk> = await response.json();
+  return result.data || null;
 }
 
 export async function createMediasiSk(data: FormData): Promise<ApiResponse<MediasiSk>> {
@@ -1202,6 +1206,12 @@ export async function deleteMediasiSk(id: number): Promise<ApiResponse<null>> {
 export async function getAllMediatorBanners(): Promise<ApiResponse<MediatorBanner[]>> {
   const response = await fetch(`${API_URL}/mediator-banners`, { cache: 'no-store' });
   return normalizeApiResponse<MediatorBanner[]>(response);
+}
+
+export async function getMediatorBanner(id: number): Promise<MediatorBanner | null> {
+  const response = await fetch(`${API_URL}/mediator-banners/${id}`);
+  const result: ApiResponse<MediatorBanner> = await response.json();
+  return result.data || null;
 }
 
 export async function createMediatorBanner(data: FormData): Promise<ApiResponse<MediatorBanner>> {
