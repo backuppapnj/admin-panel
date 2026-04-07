@@ -19,6 +19,7 @@ import {
     Handshake,
     Wallet,
     FileBarChart,
+    Lightbulb,
 } from 'lucide-react';
 import {
     Sidebar,
@@ -137,6 +138,12 @@ const routes = [
         icon: Handshake,
         href: '/mediasi',
         color: 'text-amber-600',
+    },
+    {
+        label: 'Inovasi',
+        icon: Lightbulb,
+        href: '/inovasi',
+        color: 'text-yellow-500',
     },
 ];
 

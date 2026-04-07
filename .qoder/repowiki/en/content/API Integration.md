@@ -9,9 +9,21 @@
 - [panggilan/page.tsx](file://app/panggilan/page.tsx)
 - [agenda/page.tsx](file://app/agenda/page.tsx)
 - [laporan-pengaduan/page.tsx](file://app/laporan-pengaduan/page.tsx)
+- [mediasi/page.tsx](file://app/mediasi/page.tsx)
+- [mediasi/sk/tambah/page.tsx](file://app/mediasi/sk/tambah/page.tsx)
+- [mediasi/banners/tambah/page.tsx](file://app/mediasi/banners/tambah/page.tsx)
+- [mediasi/sk/[id]/edit/page.tsx](file://app/mediasi/sk/[id]/edit/page.tsx)
 - [utils.ts](file://lib/utils.ts)
 - [package.json](file://package.json)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added new Mediasi endpoints for SK management and banner management
+- Updated API client with MediasiSk and MediatorBanner data models
+- Enhanced file upload handling for Mediasi operations
+- Added comprehensive Mediasi CRUD operations documentation
+- Updated endpoint specifications and practical usage examples
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -30,7 +42,7 @@ This document describes the centralized RESTful API client and integration patte
 - Centralized API client architecture and HTTP methods
 - URL patterns and request/response handling
 - Authentication and response normalization
-- CRUD endpoints for multiple resources
+- CRUD endpoints for multiple resources including new Mediasi management
 - Data models and parameter validation
 - Toast notification system for user feedback and error display
 - Loading states and pagination patterns
@@ -39,7 +51,7 @@ This document describes the centralized RESTful API client and integration patte
 - Troubleshooting and debugging techniques
 
 ## Project Structure
-The API integration is implemented in a single centralized module that exposes typed functions for each resource. Pages consume these functions and integrate with a toast notification system for user feedback.
+The API integration is implemented in a single centralized module that exposes typed functions for each resource. Pages consume these functions and integrate with a toast notification system for user feedback. The system now includes comprehensive Mediasi management capabilities for SK (Surat Keputusan) and banner management.
 
 ```mermaid
 graph TB
@@ -47,6 +59,10 @@ subgraph "Pages"
 P1["app/panggilan/page.tsx"]
 P2["app/agenda/page.tsx"]
 P3["app/laporan-pengaduan/page.tsx"]
+M1["app/mediasi/page.tsx"]
+M2["app/mediasi/sk/tambah/page.tsx"]
+M3["app/mediasi/banners/tambah/page.tsx"]
+M4["app/mediasi/sk/[id]/edit/page.tsx"]
 end
 subgraph "UI"
 L["app/layout.tsx"]
@@ -60,38 +76,58 @@ end
 P1 --> API
 P2 --> API
 P3 --> API
+M1 --> API
+M2 --> API
+M3 --> API
+M4 --> API
 L --> TComp
 TComp --> UToast
 P1 --> UToast
 P2 --> UToast
 P3 --> UToast
+M1 --> UToast
+M2 --> UToast
+M3 --> UToast
+M4 --> UToast
 P1 --> Utils
 P2 --> Utils
 P3 --> Utils
+M1 --> Utils
+M2 --> Utils
+M3 --> Utils
+M4 --> Utils
 ```
 
 **Diagram sources**
-- [api.ts:1-1144](file://lib/api.ts#L1-L1144)
+- [api.ts:1-1233](file://lib/api.ts#L1-L1233)
 - [use-toast.ts:1-195](file://hooks/use-toast.ts#L1-L195)
 - [toast.tsx:1-130](file://components/ui/toast.tsx#L1-L130)
 - [layout.tsx:1-37](file://app/layout.tsx#L1-L37)
 - [panggilan/page.tsx:1-310](file://app/panggilan/page.tsx#L1-L310)
 - [agenda/page.tsx:1-284](file://app/agenda/page.tsx#L1-L284)
 - [laporan-pengaduan/page.tsx:1-355](file://app/laporan-pengaduan/page.tsx#L1-L355)
+- [mediasi/page.tsx:1-222](file://app/mediasi/page.tsx#L1-L222)
+- [mediasi/sk/tambah/page.tsx:1-112](file://app/mediasi/sk/tambah/page.tsx#L1-L112)
+- [mediasi/banners/tambah/page.tsx:1-112](file://app/mediasi/banners/tambah/page.tsx#L1-L112)
+- [mediasi/sk/[id]/edit/page.tsx:1-151](file://app/mediasi/sk/[id]/edit/page.tsx#L1-L151)
 - [utils.ts:1-26](file://lib/utils.ts#L1-L26)
 
 **Section sources**
-- [api.ts:1-1144](file://lib/api.ts#L1-L1144)
+- [api.ts:1-1233](file://lib/api.ts#L1-L1233)
 - [use-toast.ts:1-195](file://hooks/use-toast.ts#L1-L195)
 - [toast.tsx:1-130](file://components/ui/toast.tsx#L1-L130)
 - [layout.tsx:1-37](file://app/layout.tsx#L1-L37)
 - [panggilan/page.tsx:1-310](file://app/panggilan/page.tsx#L1-L310)
 - [agenda/page.tsx:1-284](file://app/agenda/page.tsx#L1-L284)
 - [laporan-pengaduan/page.tsx:1-355](file://app/laporan-pengaduan/page.tsx#L1-L355)
+- [mediasi/page.tsx:1-222](file://app/mediasi/page.tsx#L1-L222)
+- [mediasi/sk/tambah/page.tsx:1-112](file://app/mediasi/sk/tambah/page.tsx#L1-L112)
+- [mediasi/banners/tambah/page.tsx:1-112](file://app/mediasi/banners/tambah/page.tsx#L1-L112)
+- [mediasi/sk/[id]/edit/page.tsx:1-151](file://app/mediasi/sk/[id]/edit/page.tsx#L1-L151)
 - [utils.ts:1-26](file://lib/utils.ts#L1-L26)
 
 ## Core Components
-- Centralized API client: Provides typed functions for CRUD operations against multiple resources. It normalizes diverse server response formats into a unified shape and adds an API key header.
+- Centralized API client: Provides typed functions for CRUD operations against multiple resources including new Mediasi management endpoints. It normalizes diverse server response formats into a unified shape and adds an API key header.
 - Toast notification system: Provides a lightweight, Radix-based toast system with a hook for imperative notifications and a provider in the root layout.
 - Page components: Consume the API client, manage loading states, pagination, and user actions, and surface feedback via the toast system.
 
@@ -162,6 +198,8 @@ end
 - File upload handling:
   - Several endpoints accept FormData; the client sets appropriate headers and uses POST with _method=PUT for updates.
 
+**Updated** Added comprehensive Mediasi management endpoints with proper file upload handling for SK documents and banner images.
+
 Endpoints and patterns by resource:
 - Panggilan Ghaib: getAllPanggilan, getPanggilan, createPanggilan, updatePanggilan, deletePanggilan
 - Itsbat Nikah: getAllItsbat, getItsbat, createItsbat, updateItsbat, deleteItsbat
@@ -178,6 +216,8 @@ Endpoints and patterns by resource:
 - Sisa Panjar: getAllSisaPanjar, getSisaPanjar, createSisaPanjar, updateSisaPanjar, deleteSisaPanjar
 - MOU: getAllMou, getMou, createMou, updateMou, deleteMou
 - LRA: getAllLra, getLra, createLra, updateLra, deleteLra
+- **Mediasi SK Management**: getAllMediasiSk, createMediasiSk, updateMediasiSk, deleteMediasiSk
+- **Mediator Banner Management**: getAllMediatorBanners, createMediatorBanner, updateMediatorBanner, deleteMediatorBanner
 
 Response normalization and error handling:
 - normalizeApiResponse adapts server responses to a consistent shape.
@@ -190,7 +230,7 @@ Authentication:
 - All requests include X-API-Key header populated from NEXT_PUBLIC_API_KEY.
 
 **Section sources**
-- [api.ts:1-1144](file://lib/api.ts#L1-L1144)
+- [api.ts:1-1233](file://lib/api.ts#L1-L1233)
 
 ### Data Models and Parameter Validation
 The API client defines TypeScript interfaces for each resource. Validation is primarily enforced by the backend; the client surfaces errors via normalized responses and toast notifications. Example models include:
@@ -199,14 +239,20 @@ The API client defines TypeScript interfaces for each resource. Validation is pr
 - AsetBmn, Sakip
 - LaporanPengaduan (with enumerated fields)
 - KeuanganPerkara, SisaPanjar, Mou, LraReport
+- **MediasiSk**: { id?, tahun, link_sk_hakim?, link_sk_non_hakim?, created_at?, updated_at? }
+- **MediatorBanner**: { id?, judul, image_url, type: 'hakim' | 'non-hakim', created_at?, updated_at? }
+
+**Updated** Added new data models for Mediasi management with proper typing for file upload fields and categorization.
 
 Validation patterns:
 - Enumerated fields (e.g., LaporanPengaduan.materi_pengaduan) restrict values.
 - Numeric fields enforce non-negative amounts where applicable.
 - Date fields are handled as ISO strings and formatted for display.
+- **Mediasi SK**: Tahun harus berupa angka positif, link file atau URL opsional.
+- **Mediator Banner**: Judul harus diisi, image_url bisa berupa file atau URL, type harus 'hakim' atau 'non-hakim'.
 
 **Section sources**
-- [api.ts:5-1144](file://lib/api.ts#L5-L1144)
+- [api.ts:5-1233](file://lib/api.ts#L5-L1233)
 
 ### Toast Notification System
 - Provider and components: Radix-based toast provider and UI components.
@@ -252,10 +298,36 @@ Integration:
   - Normalize errors via API client or custom handlers.
   - Display user-friendly messages via toast.
 
+**Updated** Added comprehensive examples for Mediasi management operations including file upload handling and form data construction.
+
 **Section sources**
 - [panggilan/page.tsx:42-90](file://app/panggilan/page.tsx#L42-L90)
 - [agenda/page.tsx:62-105](file://app/agenda/page.tsx#L62-L105)
 - [laporan-pengaduan/page.tsx:43-117](file://app/laporan-pengaduan/page.tsx#L43-L117)
+- [mediasi/sk/tambah/page.tsx:20-38](file://app/mediasi/sk/tambah/page.tsx#L20-L38)
+- [mediasi/banners/tambah/page.tsx:22-41](file://app/mediasi/banners/tambah/page.tsx#L22-L41)
+
+### Mediasi Management Endpoints
+**New Section** Comprehensive Mediasi management capabilities for SK (Surat Keputusan) and banner management.
+
+#### Mediasi SK Management
+- getAllMediasiSk: Retrieve all SK records with pagination support
+- createMediasiSk: Create new SK record with file upload support
+- updateMediasiSk: Update existing SK record with file replacement
+- deleteMediasiSk: Remove SK records
+
+#### Mediator Banner Management
+- getAllMediatorBanners: Retrieve all banner records with filtering by type
+- createMediatorBanner: Create new banner with image upload or URL
+- updateMediatorBanner: Update existing banner with image replacement
+- deleteMediatorBanner: Remove banner records
+
+**Section sources**
+- [api.ts:1149-1233](file://lib/api.ts#L1149-L1233)
+- [mediasi/page.tsx:38-222](file://app/mediasi/page.tsx#L38-L222)
+- [mediasi/sk/tambah/page.tsx:15-112](file://app/mediasi/sk/tambah/page.tsx#L15-L112)
+- [mediasi/banners/tambah/page.tsx:16-112](file://app/mediasi/banners/tambah/page.tsx#L16-L112)
+- [mediasi/sk/[id]/edit/page.tsx:15-151](file://app/mediasi/sk/[id]/edit/page.tsx#L15-L151)
 
 ## Dependency Analysis
 - API client depends on:
@@ -305,8 +377,10 @@ Utils["lib/utils.ts"] --> Pages
   - Keep loading skeletons short-lived; prefetch next pages when nearing the end.
 - Offline handling:
   - Integrate service workers or local storage for read-only offline access where feasible.
-
-[No sources needed since this section provides general guidance]
+- **File Upload Optimization**:
+  - Implement progress indicators for large file uploads.
+  - Consider chunked uploads for very large files.
+  - Cache uploaded files temporarily to reduce re-upload overhead.
 
 ## Troubleshooting Guide
 Common issues and debugging techniques:
@@ -321,6 +395,10 @@ Common issues and debugging techniques:
   - Confirm Toaster is mounted in the root layout and useToast is invoked in the page.
 - Pagination inconsistencies:
   - Ensure current_page and last_page from API responses are used to render pagination.
+- **Mediasi File Upload Issues**:
+  - Verify FormData construction includes proper file fields and metadata.
+  - Check server-side file upload limits and allowed MIME types.
+  - Ensure _method=PUT is appended for update operations with file uploads.
 
 **Section sources**
 - [api.ts:1-4](file://lib/api.ts#L1-L4)
@@ -330,9 +408,7 @@ Common issues and debugging techniques:
 - [use-toast.ts:174-192](file://hooks/use-toast.ts#L174-L192)
 
 ## Conclusion
-The centralized API client provides a consistent, typed interface for interacting with multiple backend resources. Combined with a robust toast notification system and well-structured pages, it enables reliable CRUD operations, responsive UIs, and clear user feedback. Extending the client with caching, retries, and offline capabilities will further improve reliability and performance.
-
-[No sources needed since this section summarizes without analyzing specific files]
+The centralized API client provides a consistent, typed interface for interacting with multiple backend resources. Combined with a robust toast notification system and well-structured pages, it enables reliable CRUD operations, responsive UIs, and clear user feedback. The addition of comprehensive Mediasi management capabilities enhances the system's ability to handle complex document and media management scenarios. Extending the client with caching, retries, and offline capabilities will further improve reliability and performance.
 
 ## Appendices
 
@@ -355,15 +431,29 @@ The centralized API client provides a consistent, typed interface for interactin
   - POST /laporan-pengaduan
   - PUT /laporan-pengaduan/:id
   - DELETE /laporan-pengaduan/:id
+- **Mediasi SK Management**
+  - GET /mediasi-sk
+  - POST /mediasi-sk (supports FormData with PDF files)
+  - POST /mediasi-sk/:id (with _method=PUT for FormData)
+  - DELETE /mediasi-sk/:id
+- **Mediator Banner Management**
+  - GET /mediator-banners
+  - POST /mediator-banners (supports FormData with image files)
+  - POST /mediator-banners/:id (with _method=PUT for FormData)
+  - DELETE /mediator-banners/:id
+
+**Updated** Added comprehensive Mediasi endpoint specifications with proper file upload handling.
 
 Notes:
 - All endpoints include X-API-Key header.
 - Some endpoints return { status: 'success'|'error', ... } which is normalized to a standard shape.
+- **Mediasi endpoints support both file uploads and URL-based content**.
 
 **Section sources**
 - [api.ts:97-149](file://lib/api.ts#L97-L149)
 - [api.ts:292-334](file://lib/api.ts#L292-L334)
 - [api.ts:788-850](file://lib/api.ts#L788-L850)
+- [api.ts:1149-1233](file://lib/api.ts#L1149-L1233)
 
 ### UI Integration Patterns
 - Loading states:
@@ -374,8 +464,36 @@ Notes:
   - Confirm with AlertDialog; call delete function and refresh list.
 - Editing:
   - Open dialogs or forms; call update function and refresh list.
+- **Mediasi Forms**:
+  - Construct FormData with proper field names for file uploads.
+  - Handle optional file fields and URL alternatives.
+  - Display current file information with preview links.
+
+**Updated** Added comprehensive UI integration patterns for Mediasi management forms.
 
 **Section sources**
 - [panggilan/page.tsx:30-137](file://app/panggilan/page.tsx#L30-L137)
 - [agenda/page.tsx:47-131](file://app/agenda/page.tsx#L47-L131)
 - [laporan-pengaduan/page.tsx:32-120](file://app/laporan-pengaduan/page.tsx#L32-L120)
+- [mediasi/page.tsx:38-222](file://app/mediasi/page.tsx#L38-L222)
+- [mediasi/sk/tambah/page.tsx:20-112](file://app/mediasi/sk/tambah/page.tsx#L20-L112)
+- [mediasi/banners/tambah/page.tsx:22-112](file://app/mediasi/banners/tambah/page.tsx#L22-L112)
+
+### Data Model Specifications
+- **MediasiSk**
+  - tahun: number (required) - Tahun SK
+  - link_sk_hakim: string | null - Link ke file PDF SK Hakim
+  - link_sk_non_hakim: string | null - Link ke file PDF SK Non-Hakim
+  - created_at: string - Timestamp pembuatan
+  - updated_at: string - Timestamp pembaruan
+- **MediatorBanner**
+  - judul: string (required) - Nama banner
+  - image_url: string (required) - URL gambar banner
+  - type: 'hakim' | 'non-hakim' (required) - Kategori mediator
+  - created_at: string - Timestamp pembuatan
+  - updated_at: string - Timestamp pembaruan
+
+**Updated** Added comprehensive data model specifications for Mediasi management.
+
+**Section sources**
+- [api.ts:1150-1166](file://lib/api.ts#L1150-L1166)

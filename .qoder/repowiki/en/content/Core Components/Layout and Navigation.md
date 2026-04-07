@@ -16,7 +16,17 @@
 - [app/globals.css](file://app/globals.css)
 - [tailwind.config.ts](file://tailwind.config.ts)
 - [package.json](file://package.json)
+- [app/mediasi/page.tsx](file://app/mediasi/page.tsx)
+- [app/mediasi/sk/tambah/page.tsx](file://app/mediasi/sk/tambah/page.tsx)
+- [app/mediasi/banners/tambah/page.tsx](file://app/mediasi/banners/tambah/page.tsx)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added new Mediasi menu item to the sidebar navigation with proper routing
+- Updated sidebar routes configuration to include Mediasi module
+- Enhanced navigation patterns to support the new Mediasi functionality
+- Updated component analysis to reflect the new Mediasi module structure
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -33,8 +43,10 @@
 ## Introduction
 This document explains the layout system and navigation components used in the admin panel. It covers the root layout structure, sidebar navigation with dynamic route generation, responsive behavior, and mobile adaptation. It also documents card components for content organization and table components for data presentation, along with pagination and utility helpers. The guide focuses on how the sidebar integrates with the root layout and page components, how navigation patterns are implemented, and how to customize and optimize the layout for performance and accessibility.
 
+**Updated** Added comprehensive coverage of the new Mediasi module with its dual-tab interface for managing SK Mediasi and Banner Mediator functionality.
+
 ## Project Structure
-The layout system centers around a root layout that wraps the entire application and a sidebar that provides navigation across modules. Pages consume UI primitives (cards, tables, pagination) to present structured content.
+The layout system centers around a root layout that wraps the entire application and a sidebar that provides navigation across modules. Pages consume UI primitives (cards, tables, pagination) to present structured content. The new Mediasi module adds sophisticated content management capabilities with dual-tab interface for SK and banner management.
 
 ```mermaid
 graph TB
@@ -46,6 +58,10 @@ Page --> Cards["UI Cards<br/>components/ui/card.tsx"]
 Page --> Tables["UI Tables<br/>components/ui/table.tsx"]
 Page --> Pagination["Pagination<br/>components/Pagination.tsx"]
 Sidebar --> Routes["Dynamic Routes<br/>components/app-sidebar.tsx"]
+Sidebar --> Mediasi["Mediasi Module<br/>app/mediasi/*"]
+Mediasi --> MediasiPage["Mediasi Dashboard<br/>app/mediasi/page.tsx"]
+Mediasi --> SKManagement["SK Management<br/>app/mediasi/sk/*"]
+Mediasi --> BannerManagement["Banner Management<br/>app/mediasi/banners/*"]
 Main --> Utils["Utilities<br/>lib/utils.ts"]
 Main --> API["API Layer<br/>lib/api.ts"]
 ```
@@ -59,6 +75,7 @@ Main --> API["API Layer<br/>lib/api.ts"]
 - [components/Pagination.tsx:11-153](file://components/Pagination.tsx#L11-L153)
 - [lib/utils.ts:8-16](file://lib/utils.ts#L8-L16)
 - [lib/api.ts:97-149](file://lib/api.ts#L97-L149)
+- [app/mediasi/page.tsx:38-294](file://app/mediasi/page.tsx#L38-L294)
 
 **Section sources**
 - [app/layout.tsx:12-36](file://app/layout.tsx#L12-L36)
@@ -71,6 +88,9 @@ Main --> API["API Layer<br/>lib/api.ts"]
 - App sidebar: Renders a dynamic menu from a routes array, highlights active items, and includes a user dropdown.
 - UI primitives: Card and Table components for content organization and data presentation.
 - Utilities and API: Helpers for year options and API calls used by pages.
+- **Mediasi Module**: New comprehensive content management system with dual-tab interface for SK and banner management.
+
+**Updated** Added the new Mediasi module as a core component with its sophisticated tabbed interface and dual-content management capabilities.
 
 **Section sources**
 - [app/layout.tsx:12-36](file://app/layout.tsx#L12-L36)
@@ -80,9 +100,10 @@ Main --> API["API Layer<br/>lib/api.ts"]
 - [components/ui/table.tsx:5-121](file://components/ui/table.tsx#L5-L121)
 - [lib/utils.ts:8-16](file://lib/utils.ts#L8-L16)
 - [lib/api.ts:97-149](file://lib/api.ts#L97-L149)
+- [app/mediasi/page.tsx:38-294](file://app/mediasi/page.tsx#L38-L294)
 
 ## Architecture Overview
-The layout architecture combines a root wrapper with a provider-driven sidebar. The sidebar adapts to mobile using a sheet overlay and desktop using fixed positioning. Active navigation is determined by the current path.
+The layout architecture combines a root wrapper with a provider-driven sidebar. The sidebar adapts to mobile using a sheet overlay and desktop using fixed positioning. Active navigation is determined by the current path. The new Mediasi module extends this architecture with sophisticated content management capabilities.
 
 ```mermaid
 sequenceDiagram
@@ -91,6 +112,7 @@ participant Root as "Root Layout<br/>app/layout.tsx"
 participant Provider as "SidebarProvider<br/>components/ui/sidebar.tsx"
 participant Sidebar as "App Sidebar<br/>components/app-sidebar.tsx"
 participant Nav as "Next Router"
+participant Mediasi as "Mediasi Module<br/>app/mediasi/*"
 participant Page as "Page Component<br/>app/*.tsx"
 Browser->>Root : Render app/layout.tsx
 Root->>Provider : Wrap children with SidebarProvider
@@ -98,7 +120,8 @@ Provider->>Sidebar : Render Sidebar with routes
 Sidebar->>Nav : usePathname() to compute active item
 Sidebar-->>Provider : Render menu items with active state
 Provider-->>Root : Provide context to trigger/rail/inset
-Root->>Page : Render child page content
+Root->>Mediasi : Render Mediasi module
+Mediasi->>Page : Render Mediasi dashboard with tabs
 Page-->>Browser : Render cards/tables/pagination
 ```
 
@@ -106,6 +129,7 @@ Page-->>Browser : Render cards/tables/pagination
 - [app/layout.tsx:12-36](file://app/layout.tsx#L12-L36)
 - [components/ui/sidebar.tsx:56-162](file://components/ui/sidebar.tsx#L56-L162)
 - [components/app-sidebar.tsx:137-231](file://components/app-sidebar.tsx#L137-L231)
+- [app/mediasi/page.tsx:38-294](file://app/mediasi/page.tsx#L38-L294)
 
 ## Detailed Component Analysis
 
@@ -157,8 +181,9 @@ Mobile --> Render
 
 ### Dynamic Route Generation and Active Navigation
 - The AppSidebar defines a routes array with label, icon, href, and color.
-- Active state is computed against the current path using Next’s usePathname.
+- Active state is computed against the current path using Next's usePathname.
 - Uses a menu button with optional tooltip and a shine border effect for active items.
+- **Updated** Now includes the new Mediasi route with Handshake icon and amber color scheme.
 
 ```mermaid
 flowchart TD
@@ -179,9 +204,38 @@ ApplyInactive --> Done
 - [components/app-sidebar.tsx:44-135](file://components/app-sidebar.tsx#L44-L135)
 - [components/app-sidebar.tsx:137-231](file://components/app-sidebar.tsx#L137-L231)
 
+### Mediasi Module Implementation
+- **New** Comprehensive content management system for mediator-related content.
+- Features dual-tab interface for SK Mediasi and Banner Mediator management.
+- Supports CRUD operations for SK documents and banner images.
+- Includes sophisticated data fetching, loading states, and error handling.
+- Implements responsive grid layouts for banner management.
+
+```mermaid
+flowchart TD
+MediasiModule["Mediasi Module<br/>app/mediasi/page.tsx"] --> Tabs["Dual Tab Interface"]
+Tabs --> SKTab["SK Tab<br/>Arsip SK Mediasi"]
+Tabs --> BannerTab["Banner Tab<br/>Banner Mediator"]
+SKTab --> SKTable["SK Data Table"]
+SKTable --> SKActions["CRUD Operations"]
+BannerTab --> BannerGrid["Responsive Grid Layout"]
+BannerGrid --> BannerCards["Individual Banner Cards"]
+SKActions --> LoadingStates["Loading States"]
+BannerCards --> LoadingStates
+LoadingStates --> SuccessStates["Success States"]
+```
+
+**Diagram sources**
+- [app/mediasi/page.tsx:38-294](file://app/mediasi/page.tsx#L38-L294)
+
+**Section sources**
+- [app/mediasi/page.tsx:38-294](file://app/mediasi/page.tsx#L38-L294)
+- [lib/api.ts:1150-1233](file://lib/api.ts#L1150-L1233)
+
 ### Card Components for Content Organization
 - Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter provide a consistent content container with shadows and borders.
 - Used extensively in dashboard pages to group actions and summaries.
+- **Updated** Enhanced with blur-fade animations and improved responsive design.
 
 ```mermaid
 classDiagram
@@ -220,6 +274,7 @@ Card --> CardFooter
 ### Table Components for Data Presentation
 - Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption provide a scrollable, responsive table container.
 - Used in list pages to display paginated datasets with actions.
+- **Updated** Enhanced with skeleton loading states and improved responsive behavior.
 
 ```mermaid
 classDiagram
@@ -290,6 +345,7 @@ Controls --> End
 ### Utility and API Integration
 - Year options helper generates selectable years for filters.
 - API module centralizes fetch calls for multiple domains (panggilan, itsbat, agenda, etc.), normalizing responses and handling form submissions.
+- **Updated** Enhanced with comprehensive Mediasi API functions for SK and banner management.
 
 ```mermaid
 sequenceDiagram
@@ -299,8 +355,8 @@ participant API as "lib/api.ts"
 participant Server as "Backend API"
 Page->>Utils : getYearOptions()
 Utils-->>Page : [years...]
-Page->>API : getAllPanggilan(tahun, page)
-API->>Server : GET /panggilan?page=&tahun=
+Page->>API : getAllMediasiSk() / getAllMediatorBanners()
+API->>Server : GET /mediasi-sk, /mediator-banners
 Server-->>API : JSON { success, data, meta }
 API-->>Page : Normalized result
 Page-->>Page : Render table rows
@@ -321,6 +377,7 @@ Page-->>Page : Render table rows
 - AppSidebar depends on Next router hooks, Lucide icons, and UI primitives.
 - UI primitives depend on shared utilities and Tailwind classes.
 - Pages depend on UI primitives, utilities, and the API layer.
+- **Updated** Mediasi module depends on specialized API functions and complex UI components.
 
 ```mermaid
 graph LR
@@ -333,6 +390,8 @@ Pages --> Cards["components/ui/card.tsx"]
 Pages --> Tables["components/ui/table.tsx"]
 Pages --> Utils["lib/utils.ts"]
 Pages --> API["lib/api.ts"]
+Mediasi["app/mediasi/*"] --> MediasiAPI["lib/api.ts"]
+Mediasi --> MediasiUI["Advanced UI Components"]
 ```
 
 **Diagram sources**
@@ -343,6 +402,7 @@ Pages --> API["lib/api.ts"]
 - [components/ui/table.tsx:5-121](file://components/ui/table.tsx#L5-L121)
 - [lib/utils.ts:8-16](file://lib/utils.ts#L8-L16)
 - [lib/api.ts:97-149](file://lib/api.ts#L97-L149)
+- [app/mediasi/page.tsx:38-294](file://app/mediasi/page.tsx#L38-L294)
 
 **Section sources**
 - [app/layout.tsx:12-36](file://app/layout.tsx#L12-L36)
@@ -359,6 +419,7 @@ Pages --> API["lib/api.ts"]
 - Table containers use overflow auto to prevent layout thrashing on small screens.
 - Skeleton loading in list pages improves perceived performance during data fetch.
 - Pagination limits rendered items to reduce DOM size.
+- **Updated** Mediasi module uses concurrent data fetching and optimized grid layouts for better performance.
 
 [No sources needed since this section provides general guidance]
 
@@ -368,6 +429,7 @@ Pages --> API["lib/api.ts"]
 - Mobile sidebar not opening: Confirm useIsMobile returns true on small screens and that the sheet overlay is enabled.
 - Table overflow issues: Ensure the Table wrapper has overflow auto and responsive breakpoints are configured.
 - Year filter not populating: Confirm getYearOptions is called and the Select component is bound to the returned values.
+- **Updated** Mediasi module not loading: Verify API endpoints are accessible and data fetching functions are properly implemented.
 
 **Section sources**
 - [components/ui/sidebar.tsx:56-162](file://components/ui/sidebar.tsx#L56-L162)
@@ -377,7 +439,7 @@ Pages --> API["lib/api.ts"]
 - [lib/utils.ts:8-16](file://lib/utils.ts#L8-L16)
 
 ## Conclusion
-The layout system integrates a responsive sidebar provider with a dynamic navigation menu, a root layout wrapper, and reusable UI primitives. Pages leverage cards and tables for content organization and pagination for efficient data browsing. The system balances performance with accessibility through cookie-persisted state, mobile-first design, and semantic UI components.
+The layout system integrates a responsive sidebar provider with a dynamic navigation menu, a root layout wrapper, and reusable UI primitives. Pages leverage cards and tables for content organization and pagination for efficient data browsing. The system balances performance with accessibility through cookie-persisted state, mobile-first design, and semantic UI components. **Updated** The addition of the Mediasi module demonstrates the system's extensibility and capability to handle complex content management scenarios with sophisticated UI patterns and data management.
 
 [No sources needed since this section summarizes without analyzing specific files]
 
@@ -388,6 +450,7 @@ The layout system integrates a responsive sidebar provider with a dynamic naviga
 - Ensure active states are visually distinct and announced by assistive technologies.
 - Provide meaningful labels for buttons and menus.
 - Maintain sufficient color contrast for text and interactive elements.
+- **Updated** Ensure Mediasi module provides proper ARIA labels and keyboard navigation for tabbed interfaces.
 
 [No sources needed since this section provides general guidance]
 
@@ -396,6 +459,7 @@ The layout system integrates a responsive sidebar provider with a dynamic naviga
 - Defer non-critical UI updates until after initial render.
 - Use skeleton loaders for tables and lists.
 - Keep cookie state updates minimal and scoped.
+- **Updated** Implement lazy loading for Mediasi module content and optimize API calls.
 
 [No sources needed since this section provides general guidance]
 
@@ -403,6 +467,7 @@ The layout system integrates a responsive sidebar provider with a dynamic naviga
 - Define routes in the AppSidebar routes array with label, icon, href, and color.
 - Use Next Link components inside SidebarMenuButton for navigation.
 - Compute active state with usePathname and apply active styles.
+- **Updated** Add new routes following the established pattern with appropriate icons and colors.
 
 **Section sources**
 - [components/app-sidebar.tsx:44-135](file://components/app-sidebar.tsx#L44-L135)
@@ -412,6 +477,7 @@ The layout system integrates a responsive sidebar provider with a dynamic naviga
 - Change sidebar width via CSS variables exposed by the provider.
 - Modify collapsible behavior by adjusting the collapsible prop on Sidebar.
 - Customize appearance by updating Tailwind theme variables for sidebar colors.
+- **Updated** Add new menu items following the established pattern with proper routing and styling.
 
 **Section sources**
 - [components/ui/sidebar.tsx:28-33](file://components/ui/sidebar.tsx#L28-L33)
@@ -422,8 +488,20 @@ The layout system integrates a responsive sidebar provider with a dynamic naviga
 - Add or remove modules by extending the routes array in AppSidebar.
 - Integrate new pages by rendering them under the Root Layout.
 - Adjust spacing and typography using Tailwind utilities and the global CSS theme.
+- **Updated** Implement new modules following the Mediasi pattern with proper API integration and UI components.
 
 **Section sources**
 - [components/app-sidebar.tsx:44-135](file://components/app-sidebar.tsx#L44-L135)
 - [app/layout.tsx:12-36](file://app/layout.tsx#L12-L36)
 - [tailwind.config.ts:20-100](file://tailwind.config.ts#L20-L100)
+
+### Mediasi Module Integration
+- **New** The Mediasi module demonstrates advanced content management patterns.
+- Features dual-tab interface with sophisticated data management.
+- Implements responsive design patterns for different content types.
+- Provides comprehensive CRUD operations with proper error handling.
+- Integrates seamlessly with the existing layout and navigation system.
+
+**Section sources**
+- [app/mediasi/page.tsx:38-294](file://app/mediasi/page.tsx#L38-L294)
+- [lib/api.ts:1150-1233](file://lib/api.ts#L1150-L1233)

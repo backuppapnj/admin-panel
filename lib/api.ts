@@ -40,6 +40,17 @@ export interface AgendaPimpinan {
   updated_at?: string;
 }
 
+export interface Inovasi {
+  id: number;
+  nama_inovasi: string;
+  deskripsi: string;
+  kategori: string;
+  link_dokumen?: string;
+  urutan: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -655,6 +666,11 @@ export async function deleteAsetBmn(id: number): Promise<ApiResponse<null>> {
 // API SAKIP
 // ==========================================
 
+export const KATEGORI_INOVASI = [
+  'Inovasi Layanan',
+  'Inovasi Layanan Saat Pandemi',
+] as const;
+
 export const JENIS_DOKUMEN_SAKIP = [
   'Indikator Kinerja Utama',
   'Rencana Strategis',
@@ -1235,6 +1251,62 @@ export async function updateMediatorBanner(id: number, data: FormData): Promise<
 
 export async function deleteMediatorBanner(id: number): Promise<ApiResponse<null>> {
   const response = await fetch(`${API_URL}/mediator-banners/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
+// API INOVASI
+// ==========================================
+
+// GET - Ambil semua data Inovasi
+export async function getAllInovasi(kategori?: string, page = 1): Promise<ApiResponse<Inovasi[]>> {
+  const qs: string[] = [];
+  if (kategori) qs.push(`kategori=${encodeURIComponent(kategori)}`);
+  qs.push(`page=${page}`);
+  const url = `${API_URL}/inovasi?${qs.join('&')}`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<Inovasi[]>(response);
+}
+
+// GET - Ambil satu data Inovasi
+export async function getInovasi(id: number): Promise<Inovasi | null> {
+  const response = await fetch(`${API_URL}/inovasi/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<Inovasi>(response);
+  return result.data || null;
+}
+
+// POST - Tambah data Inovasi baru
+export async function createInovasi(data: FormData | Partial<Inovasi>): Promise<ApiResponse<Inovasi>> {
+  const isFormData = data instanceof FormData;
+  const response = await fetch(`${API_URL}/inovasi`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<Inovasi>(response);
+}
+
+// PUT - Update data Inovasi
+export async function updateInovasi(id: number, data: FormData | Partial<Inovasi>): Promise<ApiResponse<Inovasi>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'PUT';
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+  const response = await fetch(`${API_URL}/inovasi/${id}`, {
+    method,
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<Inovasi>(response);
+}
+
+// DELETE - Hapus data Inovasi
+export async function deleteInovasi(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/inovasi/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
