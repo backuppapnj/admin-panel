@@ -51,6 +51,18 @@ export interface Inovasi {
   updated_at?: string;
 }
 
+export interface SkInovasi {
+  id: number;
+  tahun: number;
+  nomor_sk: string;
+  tentang: string;
+  file_path?: string;
+  file_url?: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -667,8 +679,11 @@ export async function deleteAsetBmn(id: number): Promise<ApiResponse<null>> {
 // ==========================================
 
 export const KATEGORI_INOVASI = [
-  'Inovasi Layanan',
-  'Inovasi Layanan Saat Pandemi',
+  'Inovasi Kebijakan',
+  'Inovasi Aplikasi',
+  'Inovasi Layanan Publik',
+  'Aplikasi Ditjen Badilag',
+  'Aplikasi PTA Samarinda',
 ] as const;
 
 export const JENIS_DOKUMEN_SAKIP = [
@@ -1307,6 +1322,62 @@ export async function updateInovasi(id: number, data: FormData | Partial<Inovasi
 // DELETE - Hapus data Inovasi
 export async function deleteInovasi(id: number): Promise<ApiResponse<null>> {
   const response = await fetch(`${API_URL}/inovasi/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
+// API SK INOVASI
+// ==========================================
+
+// GET - Ambil semua data SK Inovasi
+export async function getAllSkInovasi(tahun?: number, active?: boolean): Promise<ApiResponse<SkInovasi[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${tahun}`);
+  if (active !== undefined) qs.push(`active=${active ? 1 : 0}`);
+  const url = `${API_URL}/sk-inovasi${qs.length > 0 ? '?' + qs.join('&') : ''}`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<SkInovasi[]>(response);
+}
+
+// GET - Ambil satu data SK Inovasi
+export async function getSkInovasi(id: number): Promise<SkInovasi | null> {
+  const response = await fetch(`${API_URL}/sk-inovasi/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<SkInovasi>(response);
+  return result.data || null;
+}
+
+// POST - Tambah data SK Inovasi baru
+export async function createSkInovasi(data: FormData | Partial<SkInovasi>): Promise<ApiResponse<SkInovasi>> {
+  const isFormData = data instanceof FormData;
+  const response = await fetch(`${API_URL}/sk-inovasi`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<SkInovasi>(response);
+}
+
+// PUT - Update data SK Inovasi
+export async function updateSkInovasi(id: number, data: FormData | Partial<SkInovasi>): Promise<ApiResponse<SkInovasi>> {
+  const isFormData = data instanceof FormData;
+  const method = isFormData ? 'POST' : 'PUT';
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+  const response = await fetch(`${API_URL}/sk-inovasi/${id}`, {
+    method,
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+  return normalizeApiResponse<SkInovasi>(response);
+}
+
+// DELETE - Hapus data SK Inovasi
+export async function deleteSkInovasi(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/sk-inovasi/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
