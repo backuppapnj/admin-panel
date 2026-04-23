@@ -23,3 +23,9 @@ export function formatRupiah(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+export function formatDateForInput(dateString?: string | null): string {
+  if (!dateString) return '';
+  const match = dateString.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
+}

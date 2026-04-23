@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getMou, updateMou, type Mou } from '@/lib/api';
+import { formatDateForInput } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,11 @@ export default function EditMou() {
       try {
         const data = await getMou(parseInt(id));
         if (data) {
-          setFormData(data);
+          setFormData({
+            ...data,
+            tanggal: formatDateForInput(data.tanggal),
+            tanggal_berakhir: formatDateForInput(data.tanggal_berakhir),
+          });
         } else {
           toast({ variant: 'destructive', title: 'Error', description: 'Data tidak ditemukan.' });
           router.push('/mou');

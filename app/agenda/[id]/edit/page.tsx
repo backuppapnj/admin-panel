@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getAgenda, updateAgenda, type AgendaPimpinan } from '@/lib/api';
+import { formatDateForInput } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -39,7 +40,7 @@ export default function EditAgenda() {
 
         setFormData({
           id: result.id,
-          tanggal_agenda: result.tanggal_agenda || '',
+          tanggal_agenda: formatDateForInput(result.tanggal_agenda),
           isi_agenda: result.isi_agenda || '',
         });
       } catch {

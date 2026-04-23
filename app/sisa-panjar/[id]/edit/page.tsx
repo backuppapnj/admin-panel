@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getSisaPanjar, updateSisaPanjar, type SisaPanjar, type StatusSisaPanjar, NAMA_BULAN } from '@/lib/api';
-import { getYearOptions } from '@/lib/utils';
+import { getYearOptions, formatDateForInput } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,7 @@ export default function EditSisaPanjar() {
         if (data) {
           setFormData({
             ...data,
-            tanggal_setor_kas_negara: data.tanggal_setor_kas_negara || '',
+            tanggal_setor_kas_negara: formatDateForInput(data.tanggal_setor_kas_negara),
           });
         } else {
           toast({

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getItsbat, updateItsbat, type ItsbatNikah } from '@/lib/api';
-import { getYearOptions } from '@/lib/utils';
+import { getYearOptions, formatDateForInput } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -43,8 +43,8 @@ export default function EditItsbat() {
                 if (result) {
                     setFormData({
                         ...result,
-                        tanggal_pengumuman: result.tanggal_pengumuman || '',
-                        tanggal_sidang: result.tanggal_sidang || '',
+                        tanggal_pengumuman: formatDateForInput(result.tanggal_pengumuman),
+                        tanggal_sidang: formatDateForInput(result.tanggal_sidang),
                         link_detail: result.link_detail || ''
                     });
                 } else {

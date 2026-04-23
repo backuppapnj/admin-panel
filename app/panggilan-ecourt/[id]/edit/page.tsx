@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getPanggilanEcourt, updatePanggilanEcourt, type PanggilanEcourt } from '@/lib/api';
-import { getYearOptions } from '@/lib/utils';
+import { getYearOptions, formatDateForInput } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,14 @@ export default function EditPanggilanEcourt({ params }: { params: { id: string }
         try {
             const data = await getPanggilanEcourt(id);
             if (data) {
-                setFormData(data);
+                setFormData({
+                    ...data,
+                    panggilan_1: formatDateForInput(data.panggilan_1),
+                    panggilan_2: formatDateForInput(data.panggilan_2),
+                    panggilan_3: formatDateForInput(data.panggilan_3),
+                    panggilan_ikrar: formatDateForInput(data.panggilan_ikrar),
+                    tanggal_sidang: formatDateForInput(data.tanggal_sidang),
+                });
             } else {
                 toast({
                     variant: "destructive",

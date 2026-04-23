@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getDipaPok, updateDipaPok, getAllDipaPok, type DipaPok } from '@/lib/api';
+import { formatDateForInput } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +49,10 @@ export default function DipaPokEdit() {
             try {
                 const data = await getDipaPok(id);
                 if (data) {
-                    setFormData(data);
+                    setFormData({
+                        ...data,
+                        tgl_dipa: formatDateForInput(data.tgl_dipa),
+                    });
                     setOriginalRevisi(data.revisi_dipa || '');
                     if (data.thn_dipa) {
                         await loadRevisiOptions(data.thn_dipa, data.revisi_dipa || '', data.jns_dipa);
