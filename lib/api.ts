@@ -1483,6 +1483,7 @@ export interface UraianTugas {
   jenis_pegawai_id?: number;
   foto_url?: string;
   link_dokumen?: string;
+  uraian_tugas?: string;
   urutan: number;
   kelompok_jabatan?: KelompokJabatan;
   jenis_pegawai?: JenisPegawai;

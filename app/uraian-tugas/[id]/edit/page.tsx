@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BlurFade } from '@/components/ui/blur-fade';
+import { TiptapEditor } from '@/components/TiptapEditor';
 import { ChevronLeft, Save, Loader2 } from 'lucide-react';
 
 export default function EditUraianTugas() {
@@ -199,6 +200,15 @@ export default function EditUraianTugas() {
                                     placeholder="https://drive.google.com/..."
                                     value={formData.link_dokumen || ''}
                                     onChange={e => set('link_dokumen', e.target.value)}
+                                />
+                            </div>
+
+                            {/* Uraian Tugas WYSIWYG */}
+                            <div className="space-y-2">
+                                <Label>Uraian Tugas <span className="text-muted-foreground text-xs">(opsional)</span></Label>
+                                <TiptapEditor
+                                    content={formData.uraian_tugas || ''}
+                                    onChange={(html) => set('uraian_tugas', html)}
                                 />
                             </div>
 
