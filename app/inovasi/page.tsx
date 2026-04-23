@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getAllInovasi, deleteInovasi, KATEGORI_INOVASI, type Inovasi } from '@/lib/api';
+import {
+    getAllInovasi, deleteInovasi, KATEGORI_INOVASI, type Inovasi,
+    getAllSkInovasi, createSkInovasi, updateSkInovasi, deleteSkInovasi, getSkInovasi, type SkInovasi,
+} from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,13 +21,21 @@ import {
 import {
     Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis
 } from '@/components/ui/pagination';
+import {
+    Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, RefreshCw, Trash2, Edit, ExternalLink, Search } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { PlusCircle, RefreshCw, Trash2, Edit, ExternalLink, Search, Settings2, Loader2 } from 'lucide-react';
 import { BlurFade } from '@/components/ui/blur-fade';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
 const PAGE_SIZE = 15;
+
+const CURRENT_YEAR = new Date().getFullYear();
+const SK_FORM_DEFAULT: Partial<SkInovasi> = { tahun: CURRENT_YEAR, is_active: true };
 
 export default function InovasiList() {
     const [allData, setAllData] = useState<Inovasi[]>([]);
@@ -34,6 +45,16 @@ export default function InovasiList() {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const { toast } = useToast();
+
+    // State Sheet SK Inovasi
+    const [skSheetOpen, setSkSheetOpen] = useState(false);
+    const [skList, setSkList] = useState<SkInovasi[]>([]);
+    const [skLoading, setSkLoading] = useState(false);
+    const [skForm, setSkForm] = useState<Partial<SkInovasi>>(SK_FORM_DEFAULT);
+    const [skFile, setSkFile] = useState<File | null>(null);
+    const [editSkId, setEditSkId] = useState<number | null>(null);
+    const [savingSk, setSavingSk] = useState(false);
+    const [deleteSkId, setDeleteSkId] = useState<number | null>(null);
 
     const [pagination, setPagination] = useState({
         current_page: 1,
@@ -106,6 +127,90 @@ export default function InovasiList() {
         loadData();
     };
 
+    // ---- SK Inovasi ----
+    const loadSkList = async () => {
+        setSkLoading(true);
+        try {
+            const result = await getAllSkInovasi();
+            if (result.success) setSkList(result.data || []);
+        } catch {
+            toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data SK.' });
+        }
+        setSkLoading(false);
+    };
+
+    const resetSkForm = () => {
+        setSkForm(SK_FORM_DEFAULT);
+        setSkFile(null);
+        setEditSkId(null);
+    };
+
+    const handleOpenSkSheet = () => {
+        setSkSheetOpen(true);
+        loadSkList();
+    };
+
+    const handleEditSk = async (id: number) => {
+        try {
+            const result = await getSkInovasi(id);
+            if (result) {
+                setSkForm(result);
+                setEditSkId(id);
+            }
+        } catch {
+            toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data SK.' });
+        }
+    };
+
+    const handleSaveSk = async () => {
+        if (!skForm.tahun || !skForm.nomor_sk?.trim() || !skForm.tentang?.trim()) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Tahun, Nomor SK, dan Tentang wajib diisi.' });
+            return;
+        }
+        setSavingSk(true);
+        try {
+            const fd = new FormData();
+            fd.append('tahun', String(skForm.tahun));
+            fd.append('nomor_sk', skForm.nomor_sk || '');
+            fd.append('tentang', skForm.tentang || '');
+            fd.append('is_active', skForm.is_active ? '1' : '0');
+            if (skForm.file_url) fd.append('file_url', skForm.file_url);
+            if (skFile) fd.append('file', skFile);
+
+            const result = editSkId
+                ? await updateSkInovasi(editSkId, fd)
+                : await createSkInovasi(fd);
+
+            if (result.success) {
+                toast({ title: 'Sukses', description: editSkId ? 'SK berhasil diperbarui!' : 'SK berhasil ditambahkan!' });
+                resetSkForm();
+                loadSkList();
+            } else {
+                toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Terjadi kesalahan.' });
+            }
+        } catch {
+            toast({ variant: 'destructive', title: 'Gagal', description: 'Terjadi kesalahan saat menyimpan.' });
+        }
+        setSavingSk(false);
+    };
+
+    const handleDeleteSk = async () => {
+        if (!deleteSkId) return;
+        try {
+            const result = await deleteSkInovasi(deleteSkId);
+            if (result.success) {
+                toast({ title: 'Sukses', description: 'SK berhasil dihapus!' });
+                setDeleteSkId(null);
+                loadSkList();
+            } else {
+                toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Terjadi kesalahan.' });
+                setDeleteSkId(null);
+            }
+        } catch {
+            toast({ variant: 'destructive', title: 'Gagal', description: 'Terjadi kesalahan saat menghapus.' });
+        }
+    };
+
     const renderPaginationItems = () => {
         const { current_page, last_page } = pagination;
         const items = [];
@@ -154,11 +259,16 @@ export default function InovasiList() {
                         <h2 className="text-3xl font-bold tracking-tight">Inovasi</h2>
                         <p className="text-muted-foreground">Daftar inovasi layanan pengadilan.</p>
                     </div>
-                    <Link href="/inovasi/tambah">
-                        <Button className="bg-amber-600 hover:bg-amber-700 shadow-md">
-                            <PlusCircle className="mr-2 h-4 w-4" /> Tambah Data
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={handleOpenSkSheet}>
+                            <Settings2 className="mr-2 h-4 w-4" /> Kelola SK Inovasi
                         </Button>
-                    </Link>
+                        <Link href="/inovasi/tambah">
+                            <Button className="bg-amber-600 hover:bg-amber-700 shadow-md">
+                                <PlusCircle className="mr-2 h-4 w-4" /> Tambah Data
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             </BlurFade>
 
@@ -333,6 +443,157 @@ export default function InovasiList() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* AlertDialog Hapus SK */}
+            <AlertDialog open={!!deleteSkId} onOpenChange={open => !open && setDeleteSkId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus SK Inovasi?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tindakan ini tidak dapat dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteSk} className="bg-red-600 hover:bg-red-700">
+                            Ya, Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Sheet Kelola SK Inovasi */}
+            <Sheet open={skSheetOpen} onOpenChange={(open) => { setSkSheetOpen(open); if (!open) resetSkForm(); }}>
+                <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                    <SheetHeader>
+                        <SheetTitle>Kelola SK Inovasi</SheetTitle>
+                        <SheetDescription>Tambah, edit, atau hapus Surat Keputusan penetapan inovasi tahunan.</SheetDescription>
+                    </SheetHeader>
+
+                    {/* Form tambah / edit SK */}
+                    <div className="mt-6 space-y-4 border rounded-lg p-4 bg-muted/30">
+                        <h4 className="font-semibold text-sm">
+                            {editSkId ? 'Edit SK' : 'Tambah SK Baru'}
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label>Tahun <span className="text-red-500">*</span></Label>
+                                <Input
+                                    type="number"
+                                    min={2000}
+                                    max={2100}
+                                    value={skForm.tahun || CURRENT_YEAR}
+                                    onChange={e => setSkForm(prev => ({ ...prev, tahun: parseInt(e.target.value) || CURRENT_YEAR }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Status</Label>
+                                <Select
+                                    value={skForm.is_active ? 'true' : 'false'}
+                                    onValueChange={v => setSkForm(prev => ({ ...prev, is_active: v === 'true' }))}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="true">Aktif</SelectItem>
+                                        <SelectItem value="false">Nonaktif</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Nomor SK <span className="text-red-500">*</span></Label>
+                            <Input
+                                value={skForm.nomor_sk || ''}
+                                onChange={e => setSkForm(prev => ({ ...prev, nomor_sk: e.target.value }))}
+                                placeholder="1297/KPA.W17-A8/OT1.6/XII/2025"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Tentang <span className="text-red-500">*</span></Label>
+                            <Textarea
+                                value={skForm.tentang || ''}
+                                onChange={e => setSkForm(prev => ({ ...prev, tentang: e.target.value }))}
+                                placeholder="Penetapan Inovasi dan Aplikasi Tahun 2026..."
+                                rows={2}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>URL Dokumen</Label>
+                            <Input
+                                value={skForm.file_url || ''}
+                                onChange={e => setSkForm(prev => ({ ...prev, file_url: e.target.value }))}
+                                placeholder="https://drive.google.com/file/d/..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Upload File (Opsional)</Label>
+                            <Input
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                onChange={e => setSkFile(e.target.files?.[0] || null)}
+                            />
+                            {skFile && <p className="text-xs text-amber-600">File dipilih: {skFile.name}</p>}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button className="flex-1 bg-amber-600 hover:bg-amber-700" onClick={handleSaveSk} disabled={savingSk}>
+                                {savingSk ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                {editSkId ? 'Update SK' : 'Tambah SK'}
+                            </Button>
+                            {editSkId && (
+                                <Button variant="outline" onClick={resetSkForm}>Batal</Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Daftar SK */}
+                    <div className="mt-6 space-y-3">
+                        <h4 className="font-semibold text-sm">Daftar SK ({skList.length})</h4>
+                        {skLoading ? (
+                            <div className="space-y-2">
+                                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+                            </div>
+                        ) : skList.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-6 italic">Belum ada SK. Tambahkan menggunakan form di atas.</p>
+                        ) : (
+                            skList.map(sk => (
+                                <div key={sk.id} className="border rounded-lg p-3 space-y-1 bg-background">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <Badge variant="outline" className="text-xs font-bold">{sk.tahun}</Badge>
+                                                {sk.is_active
+                                                    ? <Badge className="bg-green-600 hover:bg-green-700 text-xs">Aktif</Badge>
+                                                    : <Badge variant="secondary" className="text-xs">Nonaktif</Badge>
+                                                }
+                                            </div>
+                                            <p className="text-sm font-medium text-amber-700 mt-1 truncate" title={sk.nomor_sk}>{sk.nomor_sk}</p>
+                                            <p className="text-xs text-muted-foreground line-clamp-2">{sk.tentang}</p>
+                                            {sk.file_url && (
+                                                <a href={sk.file_url} target="_blank" rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-xs text-amber-600 hover:underline mt-1">
+                                                    <ExternalLink className="h-3 w-3" /> Lihat Dokumen
+                                                </a>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-1 flex-shrink-0">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-blue-600"
+                                                onClick={() => handleEditSk(sk.id)}>
+                                                <Edit className="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-red-600 hover:bg-red-50"
+                                                onClick={() => setDeleteSkId(sk.id)}>
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }

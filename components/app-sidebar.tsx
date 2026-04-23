@@ -147,12 +147,6 @@ const routes = [
         color: 'text-yellow-500',
     },
     {
-        label: 'SK Inovasi',
-        icon: FileText,
-        href: '/sk-inovasi',
-        color: 'text-amber-600',
-    },
-    {
         label: 'Uraian Tugas',
         icon: Users,
         href: '/uraian-tugas',
