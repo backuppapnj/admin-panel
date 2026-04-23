@@ -7,8 +7,10 @@ import {
     getUraianTugas,
     updateUraianTugas,
     getAllKelompokJabatan,
+    getAllJenisPegawai,
     type UraianTugas,
     type KelompokJabatan,
+    type JenisPegawai,
 } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -29,17 +31,20 @@ export default function EditUraianTugas() {
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
     const [kelompokList, setKelompokList] = useState<KelompokJabatan[]>([]);
+    const [jenisList, setJenisList] = useState<JenisPegawai[]>([]);
     const [formData, setFormData] = useState<Partial<UraianTugas>>({});
 
     useEffect(() => {
         const load = async () => {
             try {
-                const [item, kelompokRes] = await Promise.all([
+                const [item, kelompokRes, jenisRes] = await Promise.all([
                     getUraianTugas(id),
                     getAllKelompokJabatan(),
+                    getAllJenisPegawai(),
                 ]);
                 if (item) setFormData(item);
                 if (kelompokRes.success) setKelompokList(kelompokRes.data || []);
+                if (jenisRes.success) setJenisList(jenisRes.data || []);
             } catch {
                 toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data.' });
             }
@@ -147,7 +152,7 @@ export default function EditUraianTugas() {
                                 />
                             </div>
 
-                            {/* NIP & Status */}
+                            {/* NIP & Jenis Pegawai */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>NIP <span className="text-muted-foreground text-xs">(opsional)</span></Label>
@@ -158,18 +163,18 @@ export default function EditUraianTugas() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Status Kepegawaian</Label>
+                                    <Label>Jenis Pegawai</Label>
                                     <Select
-                                        value={formData.status_kepegawaian || ''}
-                                        onValueChange={val => set('status_kepegawaian', val as 'PNS' | 'PPNPN' | 'CASN')}
+                                        value={formData.jenis_pegawai_id ? String(formData.jenis_pegawai_id) : ''}
+                                        onValueChange={val => set('jenis_pegawai_id', parseInt(val))}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Pilih status..." />
+                                            <SelectValue placeholder="Pilih jenis..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="PNS">PNS</SelectItem>
-                                            <SelectItem value="PPNPN">PPNPN</SelectItem>
-                                            <SelectItem value="CASN">CASN</SelectItem>
+                                            {jenisList.map(j => (
+                                                <SelectItem key={j.id} value={String(j.id)}>{j.nama}</SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>

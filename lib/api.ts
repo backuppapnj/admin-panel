@@ -1428,6 +1428,49 @@ export async function deleteKelompokJabatan(id: number): Promise<ApiResponse<nul
 }
 
 // ==========================================
+// API JENIS PEGAWAI
+// ==========================================
+
+export interface JenisPegawai {
+  id: number;
+  nama: string;
+  urutan: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllJenisPegawai(): Promise<ApiResponse<JenisPegawai[]>> {
+  const response = await fetch(`${API_URL}/jenis-pegawai`, { cache: 'no-store' });
+  return normalizeApiResponse<JenisPegawai[]>(response);
+}
+
+export async function createJenisPegawai(data: Partial<JenisPegawai>): Promise<ApiResponse<JenisPegawai>> {
+  const response = await fetch(`${API_URL}/jenis-pegawai`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<JenisPegawai>(response);
+}
+
+export async function updateJenisPegawai(id: number, data: Partial<JenisPegawai>): Promise<ApiResponse<JenisPegawai>> {
+  const response = await fetch(`${API_URL}/jenis-pegawai/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<JenisPegawai>(response);
+}
+
+export async function deleteJenisPegawai(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/jenis-pegawai/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
 // API URAIAN TUGAS
 // ==========================================
 
@@ -1437,11 +1480,12 @@ export interface UraianTugas {
   jabatan: string;
   kelompok_jabatan_id: number;
   nip?: string;
-  status_kepegawaian?: 'PNS' | 'PPNPN' | 'CASN';
+  jenis_pegawai_id?: number;
   foto_url?: string;
   link_dokumen?: string;
   urutan: number;
   kelompok_jabatan?: KelompokJabatan;
+  jenis_pegawai?: JenisPegawai;
   created_at?: string;
   updated_at?: string;
 }

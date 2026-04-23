@@ -9,8 +9,13 @@ import {
     createKelompokJabatan,
     updateKelompokJabatan,
     deleteKelompokJabatan,
+    getAllJenisPegawai,
+    createJenisPegawai,
+    updateJenisPegawai,
+    deleteJenisPegawai,
     type UraianTugas,
     type KelompokJabatan,
+    type JenisPegawai,
 } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,19 +41,16 @@ import {
 import { BlurFade } from '@/components/ui/blur-fade';
 import {
     PlusCircle, RefreshCw, Trash2, Edit, ExternalLink, Settings2,
-    GripVertical, Search,
+    Search, Users2, GripVertical,
 } from 'lucide-react';
 
-// Warna badge status kepegawaian
-const statusColor: Record<string, string> = {
-    PNS: 'bg-blue-100 text-blue-700',
-    PPNPN: 'bg-orange-100 text-orange-700',
-    CASN: 'bg-green-100 text-green-700',
-};
+// Warna badge jenis pegawai (fallback default)
+const defaultJenisColor = 'bg-slate-100 text-slate-700';
 
 export default function UraianTugasPage() {
     const [data, setData] = useState<UraianTugas[]>([]);
     const [kelompokList, setKelompokList] = useState<KelompokJabatan[]>([]);
+    const [jenisList, setJenisList] = useState<JenisPegawai[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterKelompok, setFilterKelompok] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +60,13 @@ export default function UraianTugasPage() {
     // State Sheet kelola kelompok
     const [sheetOpen, setSheetOpen] = useState(false);
     const [kelompokForm, setKelompokForm] = useState<Partial<KelompokJabatan>>({ nama_kelompok: '', urutan: 0 });
+
+    // State Sheet kelola jenis pegawai
+    const [jenisSheetOpen, setJenisSheetOpen] = useState(false);
+    const [jenisForm, setJenisForm] = useState<Partial<JenisPegawai>>({ nama: '', urutan: 0 });
+    const [editJenisId, setEditJenisId] = useState<number | null>(null);
+    const [savingJenis, setSavingJenis] = useState(false);
+    const [deleteJenisId, setDeleteJenisId] = useState<number | null>(null);
     const [editKelompokId, setEditKelompokId] = useState<number | null>(null);
     const [savingKelompok, setSavingKelompok] = useState(false);
     const [deleteKelompokId, setDeleteKelompokId] = useState<number | null>(null);
@@ -67,12 +76,14 @@ export default function UraianTugasPage() {
         try {
             const kelompokId = (filterKelompok && filterKelompok !== 'all') ? parseInt(filterKelompok) : undefined;
             const q = searchQuery.trim() || undefined;
-            const [tugasResult, kelompokResult] = await Promise.all([
+            const [tugasResult, kelompokResult, jenisResult] = await Promise.all([
                 getAllUraianTugas(kelompokId, q),
                 getAllKelompokJabatan(),
+                getAllJenisPegawai(),
             ]);
             if (tugasResult.success) setData(tugasResult.data || []);
             if (kelompokResult.success) setKelompokList(kelompokResult.data || []);
+            if (jenisResult.success) setJenisList(jenisResult.data || []);
         } catch {
             toast({ variant: 'destructive', title: 'Error', description: 'Gagal memuat data.' });
         }
@@ -151,6 +162,54 @@ export default function UraianTugasPage() {
         }
     };
 
+    // ---- Kelola Jenis Pegawai ----
+    const resetJenisForm = () => {
+        setJenisForm({ nama: '', urutan: 0 });
+        setEditJenisId(null);
+    };
+
+    const handleSaveJenis = async () => {
+        if (!jenisForm.nama?.trim()) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Nama jenis pegawai wajib diisi.' });
+            return;
+        }
+        setSavingJenis(true);
+        try {
+            const result = editJenisId
+                ? await updateJenisPegawai(editJenisId, jenisForm)
+                : await createJenisPegawai(jenisForm);
+            if (result.success) {
+                toast({ title: 'Sukses', description: editJenisId ? 'Jenis pegawai diperbarui!' : 'Jenis pegawai ditambahkan!' });
+                resetJenisForm();
+                const jenisResult = await getAllJenisPegawai();
+                if (jenisResult.success) setJenisList(jenisResult.data || []);
+            } else {
+                toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Terjadi kesalahan.' });
+            }
+        } catch {
+            toast({ variant: 'destructive', title: 'Gagal', description: 'Terjadi kesalahan.' });
+        }
+        setSavingJenis(false);
+    };
+
+    const handleDeleteJenis = async () => {
+        if (!deleteJenisId) return;
+        try {
+            const result = await deleteJenisPegawai(deleteJenisId);
+            if (result.success) {
+                toast({ title: 'Sukses', description: 'Jenis pegawai berhasil dihapus!' });
+                setDeleteJenisId(null);
+                const jenisResult = await getAllJenisPegawai();
+                if (jenisResult.success) setJenisList(jenisResult.data || []);
+            } else {
+                toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Tidak dapat menghapus jenis pegawai.' });
+                setDeleteJenisId(null);
+            }
+        } catch {
+            toast({ variant: 'destructive', title: 'Gagal', description: 'Terjadi kesalahan.' });
+        }
+    };
+
     return (
         <div className="space-y-6">
             <BlurFade delay={0.1} inView>
@@ -159,9 +218,12 @@ export default function UraianTugasPage() {
                         <h2 className="text-3xl font-bold tracking-tight">Uraian Tugas</h2>
                         <p className="text-muted-foreground">Kelola data pegawai dan uraian tugas jabatan.</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                         <Button variant="outline" onClick={() => setSheetOpen(true)}>
                             <Settings2 className="mr-2 h-4 w-4" /> Kelola Kelompok
+                        </Button>
+                        <Button variant="outline" onClick={() => setJenisSheetOpen(true)}>
+                            <Users2 className="mr-2 h-4 w-4" /> Kelola Jenis Pegawai
                         </Button>
                         <Link href="/uraian-tugas/tambah">
                             <Button className="bg-teal-600 hover:bg-teal-700 shadow-md">
@@ -246,9 +308,9 @@ export default function UraianTugasPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {item.status_kepegawaian ? (
-                                                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${statusColor[item.status_kepegawaian] || ''}`}>
-                                                            {item.status_kepegawaian}
+                                                    {item.jenis_pegawai ? (
+                                                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${defaultJenisColor}`}>
+                                                            {item.jenis_pegawai.nama}
                                                         </span>
                                                     ) : '—'}
                                                 </TableCell>
@@ -308,6 +370,20 @@ export default function UraianTugasPage() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Batal</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDeleteKelompok} className="bg-red-600 hover:bg-red-700">Hapus</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Dialog Hapus Jenis Pegawai */}
+            <AlertDialog open={!!deleteJenisId} onOpenChange={() => setDeleteJenisId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Jenis Pegawai?</AlertDialogTitle>
+                        <AlertDialogDescription>Jenis pegawai hanya bisa dihapus jika tidak ada pegawai yang menggunakannya.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteJenis} className="bg-red-600 hover:bg-red-700">Hapus</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -389,6 +465,91 @@ export default function UraianTugasPage() {
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => setDeleteKelompokId(k.id)}
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
+
+            {/* Sheet Kelola Jenis Pegawai */}
+            <Sheet open={jenisSheetOpen} onOpenChange={(open) => { setJenisSheetOpen(open); if (!open) resetJenisForm(); }}>
+                <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+                    <SheetHeader>
+                        <SheetTitle>Kelola Jenis Pegawai</SheetTitle>
+                        <SheetDescription>Tambah, edit, atau hapus jenis pegawai (contoh: PNS, PPNPN, CASN).</SheetDescription>
+                    </SheetHeader>
+
+                    {/* Form tambah/edit jenis pegawai */}
+                    <div className="mt-6 space-y-4 border rounded-lg p-4 bg-muted/30">
+                        <h4 className="font-semibold text-sm">
+                            {editJenisId ? 'Edit Jenis Pegawai' : 'Tambah Jenis Baru'}
+                        </h4>
+                        <div className="space-y-2">
+                            <Label>Nama Jenis Pegawai <span className="text-red-500">*</span></Label>
+                            <Input
+                                placeholder="Contoh: PNS, PPNPN, CASN..."
+                                value={jenisForm.nama || ''}
+                                onChange={e => setJenisForm(prev => ({ ...prev, nama: e.target.value }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Urutan Tampil</Label>
+                            <Input
+                                type="number"
+                                min={0}
+                                placeholder="0"
+                                value={jenisForm.urutan ?? 0}
+                                onChange={e => setJenisForm(prev => ({ ...prev, urutan: parseInt(e.target.value) || 0 }))}
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                className="flex-1 bg-teal-600 hover:bg-teal-700"
+                                onClick={handleSaveJenis}
+                                disabled={savingJenis}
+                            >
+                                {savingJenis ? 'Menyimpan...' : editJenisId ? 'Simpan Perubahan' : 'Tambah'}
+                            </Button>
+                            {editJenisId && (
+                                <Button variant="outline" onClick={resetJenisForm}>Batal</Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Daftar jenis pegawai */}
+                    <div className="mt-6 space-y-2">
+                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">
+                            Daftar Jenis Pegawai ({jenisList.length})
+                        </h4>
+                        {jenisList.length === 0 ? (
+                            <p className="text-sm text-muted-foreground italic text-center py-4">Belum ada jenis pegawai.</p>
+                        ) : (
+                            jenisList.map(j => (
+                                <div key={j.id} className="flex items-center justify-between p-3 rounded-lg border bg-background">
+                                    <div>
+                                        <p className="text-sm font-medium">{j.nama}</p>
+                                        <p className="text-xs text-muted-foreground">Urutan: {j.urutan}</p>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => {
+                                                setEditJenisId(j.id);
+                                                setJenisForm({ nama: j.nama, urutan: j.urutan });
+                                            }}
+                                        >
+                                            <Edit className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setDeleteJenisId(j.id)}
                                         >
                                             <Trash2 className="h-3.5 w-3.5 text-red-500" />
                                         </Button>
