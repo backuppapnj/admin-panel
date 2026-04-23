@@ -1383,3 +1383,107 @@ export async function deleteSkInovasi(id: number): Promise<ApiResponse<null>> {
   });
   return normalizeApiResponse<null>(response);
 }
+
+// ==========================================
+// API KELOMPOK JABATAN
+// ==========================================
+
+export interface KelompokJabatan {
+  id: number;
+  nama_kelompok: string;
+  urutan: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllKelompokJabatan(): Promise<ApiResponse<KelompokJabatan[]>> {
+  const response = await fetch(`${API_URL}/kelompok-jabatan`, { cache: 'no-store' });
+  return normalizeApiResponse<KelompokJabatan[]>(response);
+}
+
+export async function createKelompokJabatan(data: Partial<KelompokJabatan>): Promise<ApiResponse<KelompokJabatan>> {
+  const response = await fetch(`${API_URL}/kelompok-jabatan`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<KelompokJabatan>(response);
+}
+
+export async function updateKelompokJabatan(id: number, data: Partial<KelompokJabatan>): Promise<ApiResponse<KelompokJabatan>> {
+  const response = await fetch(`${API_URL}/kelompok-jabatan/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<KelompokJabatan>(response);
+}
+
+export async function deleteKelompokJabatan(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/kelompok-jabatan/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
+// API URAIAN TUGAS
+// ==========================================
+
+export interface UraianTugas {
+  id: number;
+  nama?: string;
+  jabatan: string;
+  kelompok_jabatan_id: number;
+  nip?: string;
+  status_kepegawaian?: 'PNS' | 'PPNPN' | 'CASN';
+  foto_url?: string;
+  link_dokumen?: string;
+  urutan: number;
+  kelompok_jabatan?: KelompokJabatan;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllUraianTugas(kelompokId?: number, q?: string): Promise<ApiResponse<UraianTugas[]>> {
+  let url = `${API_URL}/uraian-tugas`;
+  const params: string[] = [];
+  if (kelompokId) params.push(`kelompok_id=${kelompokId}`);
+  if (q) params.push(`q=${encodeURIComponent(q)}`);
+  if (params.length) url += `?${params.join('&')}`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<UraianTugas[]>(response);
+}
+
+export async function getUraianTugas(id: number): Promise<UraianTugas | null> {
+  const response = await fetch(`${API_URL}/uraian-tugas/${id}`);
+  const result = await normalizeApiResponse<UraianTugas>(response);
+  return result.data || null;
+}
+
+export async function createUraianTugas(data: Partial<UraianTugas>): Promise<ApiResponse<UraianTugas>> {
+  const response = await fetch(`${API_URL}/uraian-tugas`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<UraianTugas>(response);
+}
+
+export async function updateUraianTugas(id: number, data: Partial<UraianTugas>): Promise<ApiResponse<UraianTugas>> {
+  const response = await fetch(`${API_URL}/uraian-tugas/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<UraianTugas>(response);
+}
+
+export async function deleteUraianTugas(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/uraian-tugas/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}

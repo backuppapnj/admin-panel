@@ -20,6 +20,7 @@ import {
     Wallet,
     FileBarChart,
     Lightbulb,
+    Users,
 } from 'lucide-react';
 import {
     Sidebar,
@@ -150,6 +151,12 @@ const routes = [
         icon: FileText,
         href: '/sk-inovasi',
         color: 'text-amber-600',
+    },
+    {
+        label: 'Uraian Tugas',
+        icon: Users,
+        href: '/uraian-tugas',
+        color: 'text-teal-500',
     },
 ];
 
