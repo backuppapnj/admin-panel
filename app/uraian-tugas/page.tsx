@@ -30,6 +30,9 @@ import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
+    Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
@@ -55,6 +58,13 @@ export default function UraianTugasPage() {
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const { toast } = useToast();
 
+    const PER_PAGE = 10;
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        total: 0
+    });
+
     // State Sheet kelola kelompok
     const [sheetOpen, setSheetOpen] = useState(false);
     const [kelompokForm, setKelompokForm] = useState<Partial<KelompokJabatan>>({ nama_kelompok: '', urutan: 0 });
@@ -69,17 +79,26 @@ export default function UraianTugasPage() {
     const [savingKelompok, setSavingKelompok] = useState(false);
     const [deleteKelompokId, setDeleteKelompokId] = useState<number | null>(null);
 
-    const loadData = async () => {
+    const loadData = async (page = 1) => {
         setLoading(true);
         try {
             const kelompokId = (filterKelompok && filterKelompok !== 'all') ? parseInt(filterKelompok) : undefined;
             const q = searchQuery.trim() || undefined;
             const [tugasResult, kelompokResult, jenisResult] = await Promise.all([
-                getAllUraianTugas(kelompokId, q),
+                getAllUraianTugas(kelompokId, q, page, PER_PAGE),
                 getAllKelompokJabatan(),
                 getAllJenisPegawai(),
             ]);
-            if (tugasResult.success) setData(tugasResult.data || []);
+            if (tugasResult.success) {
+                setData(tugasResult.data || []);
+                setPagination({
+                    current_page: tugasResult.current_page || 1,
+                    last_page: tugasResult.last_page || 1,
+                    total: tugasResult.total || 0
+                });
+            } else {
+                setData([]);
+            }
             if (kelompokResult.success) setKelompokList(kelompokResult.data || []);
             if (jenisResult.success) setJenisList(jenisResult.data || []);
         } catch {
@@ -93,7 +112,7 @@ export default function UraianTugasPage() {
     }, [filterKelompok]);
 
     useEffect(() => {
-        const timer = setTimeout(() => loadData(), 400);
+        const timer = setTimeout(() => loadData(1), 400);
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
@@ -104,7 +123,7 @@ export default function UraianTugasPage() {
             await deleteUraianTugas(deleteId);
             toast({ title: 'Sukses', description: 'Data berhasil dihapus!' });
             setDeleteId(null);
-            loadData();
+            loadData(pagination.current_page);
         } catch {
             toast({ variant: 'destructive', title: 'Gagal', description: 'Terjadi kesalahan saat menghapus data.' });
         }
@@ -208,6 +227,31 @@ export default function UraianTugasPage() {
         }
     };
 
+    const renderPaginationItems = () => {
+        const { current_page, last_page } = pagination;
+        const items = [];
+        const delta = 2;
+
+        for (let i = 1; i <= last_page; i++) {
+            if (i === 1 || i === last_page || (i >= current_page - delta && i <= current_page + delta)) {
+                items.push(
+                    <PaginationItem key={i}>
+                        <PaginationLink isActive={current_page === i} onClick={() => loadData(i)} className="cursor-pointer">
+                            {i}
+                        </PaginationLink>
+                    </PaginationItem>
+                );
+            } else if (
+                items.length > 0 &&
+                (items[items.length - 1] as any)?.key &&
+                !String((items[items.length - 1] as any).key).startsWith('ellipsis')
+            ) {
+                items.push(<PaginationItem key={`ellipsis-${i}`}><PaginationEllipsis /></PaginationItem>);
+            }
+        }
+        return items;
+    };
+
     return (
         <div className="space-y-6">
             <BlurFade delay={0.1} inView>
@@ -255,7 +299,7 @@ export default function UraianTugasPage() {
                             ))}
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" onClick={loadData} size="icon">
+                    <Button variant="outline" onClick={() => loadData(pagination.current_page)} size="icon">
                         <RefreshCw className="h-4 w-4" />
                     </Button>
                 </div>
@@ -338,6 +382,29 @@ export default function UraianTugasPage() {
                                         ))}
                                     </TableBody>
                                 </Table>
+
+                                {/* Pagination Container */}
+                                {pagination.last_page > 1 && (
+                                    <div className="mt-6 flex justify-center">
+                                        <Pagination>
+                                            <PaginationContent>
+                                                <PaginationItem>
+                                                    <PaginationPrevious
+                                                        onClick={() => pagination.current_page > 1 && loadData(pagination.current_page - 1)}
+                                                        className={pagination.current_page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                                {renderPaginationItems()}
+                                                <PaginationItem>
+                                                    <PaginationNext
+                                                        onClick={() => pagination.current_page < pagination.last_page && loadData(pagination.current_page + 1)}
+                                                        className={pagination.current_page >= pagination.last_page ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </CardContent>

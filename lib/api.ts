@@ -1491,9 +1491,9 @@ export interface UraianTugas {
   updated_at?: string;
 }
 
-export async function getAllUraianTugas(kelompokId?: number, q?: string): Promise<ApiResponse<UraianTugas[]>> {
+export async function getAllUraianTugas(kelompokId?: number, q?: string, page = 1, perPage = 10): Promise<ApiResponse<UraianTugas[]>> {
   let url = `${API_URL}/uraian-tugas`;
-  const params: string[] = [];
+  const params: string[] = ['paginate=1', `page=${page}`, `per_page=${perPage}`];
   if (kelompokId) params.push(`kelompok_id=${kelompokId}`);
   if (q) params.push(`q=${encodeURIComponent(q)}`);
   if (params.length) url += `?${params.join('&')}`;
