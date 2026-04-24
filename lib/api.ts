@@ -1517,11 +1517,27 @@ export async function createUraianTugas(data: Partial<UraianTugas>): Promise<Api
 }
 
 export async function updateUraianTugas(id: number, data: Partial<UraianTugas>): Promise<ApiResponse<UraianTugas>> {
+  // Lumen tidak mem-parse JSON body untuk PUT request.
+  // Gunakan POST + _method=PUT (method spoofing) agar body terbaca.
+  const payload = { ...data, _method: 'PUT' };
   const response = await fetch(`${API_URL}/uraian-tugas/${id}`, {
-    method: 'PUT',
+    method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* non-JSON body */ }
+    return { success: false, message: msg };
+  }
   return normalizeApiResponse<UraianTugas>(response);
 }
 
