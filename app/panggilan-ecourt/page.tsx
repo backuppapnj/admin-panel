@@ -1,5 +1,6 @@
 'use client';
 
+import { MagicDeleteDialog } from '@/components/custom/magic-delete-dialog';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getAllPanggilanEcourt, deletePanggilanEcourt, type PanggilanEcourt } from '@/lib/api';
@@ -14,9 +15,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import {
     Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis
 } from "@/components/ui/pagination";
@@ -262,25 +261,13 @@ export default function PanggilanEcourtList() {
             </BlurFade>
 
             {/* Delete Dialog */}
-            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Apakah Anda yakin ingin menghapus data panggilan ini? Tindakan ini tidak dapat dibatalkan.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-                        >
-                            Ya, Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Konfirmasi Hapus"
+        description="Apakah Anda yakin ingin menghapus data panggilan ini? Tindakan ini tidak dapat dibatalkan."
+      />
 
         </div>
     );

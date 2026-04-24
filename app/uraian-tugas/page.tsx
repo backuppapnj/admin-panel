@@ -1,5 +1,6 @@
 'use client';
 
+import { MagicDeleteDialog } from '@/components/custom/magic-delete-dialog';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -31,10 +32,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
 import {
     Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
@@ -347,46 +345,31 @@ export default function UraianTugasPage() {
             </BlurFade>
 
             {/* Dialog Hapus Pegawai */}
-            <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Data Pegawai?</AlertDialogTitle>
-                        <AlertDialogDescription>Tindakan ini tidak dapat dibatalkan.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Hapus</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Hapus Data Pegawai?"
+        description="Tindakan ini tidak dapat dibatalkan."
+      />
 
             {/* Dialog Hapus Kelompok */}
-            <AlertDialog open={!!deleteKelompokId} onOpenChange={() => setDeleteKelompokId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Kelompok Jabatan?</AlertDialogTitle>
-                        <AlertDialogDescription>Kelompok hanya bisa dihapus jika tidak ada pegawai di dalamnya.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteKelompok} className="bg-red-600 hover:bg-red-700">Hapus</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteKelompokId}
+        onClose={() => setDeleteKelompokId(null)}
+        onConfirm={handleDeleteKelompok}
+        title="Hapus Kelompok Jabatan?"
+        description="Kelompok hanya bisa dihapus jika tidak ada pegawai di dalamnya."
+      />
 
             {/* Dialog Hapus Jenis Pegawai */}
-            <AlertDialog open={!!deleteJenisId} onOpenChange={() => setDeleteJenisId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Jenis Pegawai?</AlertDialogTitle>
-                        <AlertDialogDescription>Jenis pegawai hanya bisa dihapus jika tidak ada pegawai yang menggunakannya.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteJenis} className="bg-red-600 hover:bg-red-700">Hapus</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteJenisId}
+        onClose={() => setDeleteJenisId(null)}
+        onConfirm={handleDeleteJenis}
+        title="Hapus Jenis Pegawai?"
+        description="Jenis pegawai hanya bisa dihapus jika tidak ada pegawai yang menggunakannya."
+      />
 
             {/* Sheet Kelola Kelompok */}
             <Sheet open={sheetOpen} onOpenChange={(open) => { setSheetOpen(open); if (!open) resetKelompokForm(); }}>

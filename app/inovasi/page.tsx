@@ -1,5 +1,6 @@
 'use client';
 
+import { MagicDeleteDialog } from '@/components/custom/magic-delete-dialog';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -15,9 +16,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
 import {
     Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis
 } from '@/components/ui/pagination';
@@ -424,43 +423,22 @@ export default function InovasiList() {
                 </Card>
             </BlurFade>
 
-            <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Apakah Anda yakin ingin menghapus data ini? Tindakan tidak dapat dibatalkan.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-                        >
-                            Ya, Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Konfirmasi Hapus"
+        description="Apakah Anda yakin ingin menghapus data ini? Tindakan tidak dapat dibatalkan."
+      />
 
             {/* AlertDialog Hapus SK */}
-            <AlertDialog open={!!deleteSkId} onOpenChange={open => !open && setDeleteSkId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus SK Inovasi?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteSk} className="bg-red-600 hover:bg-red-700">
-                            Ya, Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteSkId}
+        onClose={() => setDeleteSkId(null)}
+        onConfirm={handleDeleteSk}
+        title="Hapus SK Inovasi?"
+        description="SK Inovasi yang dihapus tidak dapat dikembalikan."
+      />
 
             {/* Sheet Kelola SK Inovasi */}
             <Sheet open={skSheetOpen} onOpenChange={(open) => { setSkSheetOpen(open); if (!open) resetSkForm(); }}>

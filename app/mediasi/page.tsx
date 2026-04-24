@@ -1,5 +1,6 @@
 'use client';
 
+import { MagicDeleteDialog } from '@/components/custom/magic-delete-dialog';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
@@ -16,9 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
     PlusCircle, 
@@ -262,32 +261,22 @@ export default function MediasiPage() {
             </Tabs>
 
             {/* Alert Conflict SK */}
-            <AlertDialog open={!!deleteSkId} onOpenChange={() => setDeleteSkId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus SK?</AlertDialogTitle>
-                        <AlertDialogDescription>Data SK tahun ini akan dihapus permanen.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteSk} className="bg-red-600">Hapus</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteSkId}
+        onClose={() => setDeleteSkId(null)}
+        onConfirm={handleDeleteSk}
+        title="Hapus SK?"
+        description="Data SK tahun ini akan dihapus permanen."
+      />
 
             {/* Alert Conflict Banner */}
-            <AlertDialog open={!!deleteBannerId} onOpenChange={() => setDeleteBannerId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Banner?</AlertDialogTitle>
-                        <AlertDialogDescription>Gambar banner mediator akan dihapus permanen.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteBanner} className="bg-red-600">Hapus</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteBannerId}
+        onClose={() => setDeleteBannerId(null)}
+        onConfirm={handleDeleteBanner}
+        title="Hapus Banner?"
+        description="Banner yang dihapus tidak dapat dikembalikan."
+      />
         </div>
     );
 }

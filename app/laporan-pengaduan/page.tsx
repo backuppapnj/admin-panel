@@ -1,5 +1,6 @@
 'use client';
 
+import { MagicDeleteDialog } from '@/components/custom/magic-delete-dialog';
 import { useState, useEffect } from 'react';
 import { getAllLaporanPengaduan, deleteLaporanPengaduan, MATERI_PENGADUAN, type LaporanPengaduan } from '@/lib/api';
 import { getYearOptions } from '@/lib/utils';
@@ -12,9 +13,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw, Trash2, Edit, PlusCircle } from 'lucide-react';
 import { BlurFade } from '@/components/ui/blur-fade';
@@ -303,22 +302,13 @@ export default function LaporanPengaduanList() {
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Apakah Anda yakin ingin menghapus data ini? Tindakan tidak dapat dibatalkan.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
-                            Ya, Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <MagicDeleteDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Konfirmasi Hapus"
+        description="Apakah Anda yakin ingin menghapus data ini? Tindakan tidak dapat dibatalkan."
+      />
 
             <Dialog open={addTahunOpen} onOpenChange={setAddTahunOpen}>
                 <DialogContent className="max-w-sm">
