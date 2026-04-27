@@ -6,15 +6,17 @@ import { createSurveyPekan, type SurveyPekan } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from '@/components/ui/blur-fade';
 
 interface IndikatorState {
     gambar_url: string;
     link_url: string;
+    nilai: string;       // disimpan sbg string agar input number bisa kosong
     file: File | null;
 }
 
@@ -35,10 +37,13 @@ export default function SurveyPekanTambah() {
         tanggal_selesai: '',
     });
 
+    const [totalResponden, setTotalResponden] = useState<string>('');
+    const [catatan, setCatatan] = useState<string>('');
+
     const [indikator, setIndikator] = useState<Record<'ikm' | 'ipkp' | 'ipak', IndikatorState>>({
-        ikm:  { gambar_url: '', link_url: '', file: null },
-        ipkp: { gambar_url: '', link_url: '', file: null },
-        ipak: { gambar_url: '', link_url: '', file: null },
+        ikm:  { gambar_url: '', link_url: '', nilai: '', file: null },
+        ipkp: { gambar_url: '', link_url: '', nilai: '', file: null },
+        ipak: { gambar_url: '', link_url: '', nilai: '', file: null },
     });
 
     const updateIndikator = (key: 'ikm' | 'ipkp' | 'ipak', field: keyof IndikatorState, val: any) => {
@@ -70,8 +75,11 @@ export default function SurveyPekanTambah() {
                 const data = indikator[ind.key];
                 if (data.gambar_url) fd.append(`gambar_${ind.key}`, data.gambar_url);
                 if (data.link_url) fd.append(`link_${ind.key}`, data.link_url);
+                if (data.nilai !== '') fd.append(`nilai_${ind.key}`, data.nilai);
                 if (data.file) fd.append(`file_gambar_${ind.key}`, data.file);
             }
+            if (totalResponden !== '') fd.append('total_responden', totalResponden);
+            if (catatan.trim()) fd.append('catatan', catatan);
 
             const result = await createSurveyPekan(fd);
             if (result.success) {
@@ -127,6 +135,34 @@ export default function SurveyPekanTambah() {
                                 </div>
                             </div>
 
+                            {/* Statistik umum pekan */}
+                            <div className="rounded-lg border border-indigo-200 bg-indigo-50/40 p-4 space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <BarChart3 className="h-4 w-4 text-indigo-600" />
+                                    <h3 className="font-semibold text-sm text-indigo-700">Statistik Pekan</h3>
+                                    <span className="text-xs text-muted-foreground">(opsional, untuk visualisasi tanpa gambar)</span>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Total Responden</Label>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        value={totalResponden}
+                                        onChange={e => setTotalResponden(e.target.value)}
+                                        placeholder="35"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs">Catatan</Label>
+                                    <Textarea
+                                        rows={2}
+                                        value={catatan}
+                                        onChange={e => setCatatan(e.target.value)}
+                                        placeholder="Catatan tambahan untuk pekan ini..."
+                                    />
+                                </div>
+                            </div>
+
                             {/* Indikator */}
                             {indikatorList.map(ind => {
                                 const colorMap: Record<string, string> = {
@@ -142,6 +178,18 @@ export default function SurveyPekanTambah() {
                                                 <h3 className="font-bold text-sm">{ind.label}</h3>
                                                 <p className="text-xs text-muted-foreground">{ind.desc}</p>
                                             </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">Nilai Indeks {ind.label}</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                min={0}
+                                                max={100}
+                                                value={data.nilai}
+                                                onChange={e => updateIndikator(ind.key, 'nilai', e.target.value)}
+                                                placeholder="86.45"
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-xs">URL Gambar</Label>

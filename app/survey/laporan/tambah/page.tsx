@@ -2,15 +2,16 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createSurveyLaporan, KATEGORI_SURVEY_LAPORAN, type SurveyLaporan, type KategoriSurveyLaporan } from '@/lib/api';
+import { createSurveyLaporan, KATEGORI_SURVEY_LAPORAN, KATEGORI_MUTU, type SurveyLaporan, type KategoriSurveyLaporan } from '@/lib/api';
 import { getYearOptions } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { BlurFade } from '@/components/ui/blur-fade';
 
@@ -136,6 +137,101 @@ function SurveyLaporanForm() {
                             {PERIODE_PRESET.map(p => <option key={p} value={p} />)}
                         </datalist>
                         <p className="text-xs text-muted-foreground">Bebas isi: Triwulan I/II/III/IV, Semester, atau periode lain.</p>
+                    </div>
+
+                    {/* ── Section: Skor & Detail Laporan ────────────────── */}
+                    <div className="rounded-lg border border-fuchsia-200 bg-fuchsia-50/40 p-4 space-y-4">
+                        <div className="flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4 text-fuchsia-600" />
+                            <h3 className="font-semibold text-sm text-fuchsia-700">Skor & Detail Laporan</h3>
+                            <span className="text-xs text-muted-foreground">(opsional, untuk visualisasi tanpa gambar)</span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-2">
+                                <Label className="text-xs">Nilai Indeks</Label>
+                                <Input
+                                    type="number"
+                                    step="0.01"
+                                    min={0}
+                                    max={100}
+                                    value={formData.nilai_indeks ?? ''}
+                                    onChange={e => setFormData(prev => ({
+                                        ...prev,
+                                        nilai_indeks: e.target.value === '' ? null : parseFloat(e.target.value)
+                                    }))}
+                                    placeholder="86.45"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs">Kategori Mutu</Label>
+                                <Select
+                                    value={formData.kategori_mutu || ''}
+                                    onValueChange={v => setFormData(prev => ({ ...prev, kategori_mutu: v || null }))}
+                                >
+                                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                                    <SelectContent>
+                                        {KATEGORI_MUTU.map(m => (
+                                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs">Jumlah Responden</Label>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    value={formData.jumlah_responden ?? ''}
+                                    onChange={e => setFormData(prev => ({
+                                        ...prev,
+                                        jumlah_responden: e.target.value === '' ? null : parseInt(e.target.value)
+                                    }))}
+                                    placeholder="150"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label className="text-xs">Unsur Tertinggi</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.unsur_tertinggi || ''}
+                                    onChange={e => setFormData(prev => ({ ...prev, unsur_tertinggi: e.target.value || null }))}
+                                    placeholder="Sikap Petugas"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs">Unsur Terendah</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.unsur_terendah || ''}
+                                    onChange={e => setFormData(prev => ({ ...prev, unsur_terendah: e.target.value || null }))}
+                                    placeholder="Waktu Pelayanan"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-xs">Kesimpulan</Label>
+                            <Textarea
+                                rows={3}
+                                value={formData.kesimpulan || ''}
+                                onChange={e => setFormData(prev => ({ ...prev, kesimpulan: e.target.value || null }))}
+                                placeholder="Ringkasan eksekutif hasil survey..."
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-xs">Rekomendasi</Label>
+                            <Textarea
+                                rows={3}
+                                value={formData.rekomendasi || ''}
+                                onChange={e => setFormData(prev => ({ ...prev, rekomendasi: e.target.value || null }))}
+                                placeholder="Tindak lanjut yang disarankan..."
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">

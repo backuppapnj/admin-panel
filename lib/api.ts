@@ -1561,12 +1561,34 @@ export const KATEGORI_SURVEY_LAPORAN = [
 
 export type KategoriSurveyLaporan = typeof KATEGORI_SURVEY_LAPORAN[number]['value'];
 
+/**
+ * Pilihan kategori mutu IKM/IPAK sesuai PermenPAN-RB 14/2017.
+ * Nilai indeks 0-100. Kategori "Tidak Baik" < 25, "Kurang Baik" 25-64.99,
+ * "Baik" 65-76.60, "Sangat Baik" 76.61-88.30, "Sangat Sangat Baik" 88.31-100.
+ */
+export const KATEGORI_MUTU = [
+  { value: 'A', label: 'A — Sangat Baik (88.31–100)' },
+  { value: 'B', label: 'B — Baik (76.61–88.30)' },
+  { value: 'C', label: 'C — Kurang Baik (65.00–76.60)' },
+  { value: 'D', label: 'D — Tidak Baik (25.00–64.99)' },
+] as const;
+
+export type KategoriMutu = typeof KATEGORI_MUTU[number]['value'];
+
 export interface SurveyLaporan {
   id?: number;
   kategori: KategoriSurveyLaporan;
   tahun: number;
   periode: string;
   urutan: number;
+  // Skor & detail (opsional, NULL untuk laporan lama / Tindak Lanjut)
+  nilai_indeks?: number | null;
+  kategori_mutu?: string | null;
+  jumlah_responden?: number | null;
+  unsur_terendah?: string | null;
+  unsur_tertinggi?: string | null;
+  kesimpulan?: string | null;
+  rekomendasi?: string | null;
   gambar_url?: string | null;
   link_dokumen?: string | null;
   created_at?: string;
@@ -1663,10 +1685,15 @@ export interface SurveyPekan {
   tanggal_selesai: string;
   gambar_ikm?: string | null;
   link_ikm?: string | null;
+  nilai_ikm?: number | null;
   gambar_ipkp?: string | null;
   link_ipkp?: string | null;
+  nilai_ipkp?: number | null;
   gambar_ipak?: string | null;
   link_ipak?: string | null;
+  nilai_ipak?: number | null;
+  total_responden?: number | null;
+  catatan?: string | null;
   created_at?: string;
   updated_at?: string;
 }
