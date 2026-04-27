@@ -1548,3 +1548,203 @@ export async function deleteUraianTugas(id: number): Promise<ApiResponse<null>> 
   });
   return normalizeApiResponse<null>(response);
 }
+
+// ==========================================
+// API SURVEY LAPORAN (IKM, IPAK, Tindak Lanjut)
+// ==========================================
+
+export const KATEGORI_SURVEY_LAPORAN = [
+  { value: 'IKM',           label: 'Survei Kepuasan Masyarakat' },
+  { value: 'IPAK',          label: 'Indeks Persepsi Anti Korupsi' },
+  { value: 'TINDAK_LANJUT', label: 'Tindak Lanjut Hasil Survei' },
+] as const;
+
+export type KategoriSurveyLaporan = typeof KATEGORI_SURVEY_LAPORAN[number]['value'];
+
+export interface SurveyLaporan {
+  id?: number;
+  kategori: KategoriSurveyLaporan;
+  tahun: number;
+  periode: string;
+  urutan: number;
+  gambar_url?: string | null;
+  link_dokumen?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllSurveyLaporan(params?: { tahun?: number; kategori?: KategoriSurveyLaporan }): Promise<ApiResponse<SurveyLaporan[]>> {
+  const qs: string[] = [];
+  if (params?.tahun) qs.push(`tahun=${encodeURIComponent(String(params.tahun))}`);
+  if (params?.kategori) qs.push(`kategori=${encodeURIComponent(params.kategori)}`);
+  const url = qs.length ? `${API_URL}/survey-laporan?${qs.join('&')}` : `${API_URL}/survey-laporan`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<SurveyLaporan[]>(response);
+}
+
+export async function getSurveyLaporan(id: number): Promise<SurveyLaporan | null> {
+  const response = await fetch(`${API_URL}/survey-laporan/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<SurveyLaporan>(response);
+  return result.data || null;
+}
+
+export async function createSurveyLaporan(data: FormData | SurveyLaporan): Promise<ApiResponse<SurveyLaporan>> {
+  const isFormData = data instanceof FormData;
+  const body = isFormData ? data : JSON.stringify(data);
+
+  const response = await fetch(`${API_URL}/survey-laporan`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body,
+  });
+
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+
+  return normalizeApiResponse<SurveyLaporan>(response);
+}
+
+export async function updateSurveyLaporan(id: number, data: FormData | Partial<SurveyLaporan>): Promise<ApiResponse<SurveyLaporan>> {
+  const isFormData = data instanceof FormData;
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+
+  const response = await fetch(`${API_URL}/survey-laporan/${id}`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+
+  return normalizeApiResponse<SurveyLaporan>(response);
+}
+
+export async function deleteSurveyLaporan(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/survey-laporan/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
+
+// ==========================================
+// API SURVEY PEKAN (snapshot mingguan)
+// ==========================================
+
+export interface SurveyPekan {
+  id?: number;
+  tahun: number;
+  tanggal_mulai: string; // YYYY-MM-DD
+  tanggal_selesai: string;
+  gambar_ikm?: string | null;
+  link_ikm?: string | null;
+  gambar_ipkp?: string | null;
+  link_ipkp?: string | null;
+  gambar_ipak?: string | null;
+  link_ipak?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllSurveyPekan(tahun?: number): Promise<ApiResponse<SurveyPekan[]>> {
+  const qs: string[] = [];
+  if (tahun) qs.push(`tahun=${encodeURIComponent(String(tahun))}`);
+  const url = qs.length ? `${API_URL}/survey-pekan?${qs.join('&')}` : `${API_URL}/survey-pekan`;
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<SurveyPekan[]>(response);
+}
+
+export async function getSurveyPekan(id: number): Promise<SurveyPekan | null> {
+  const response = await fetch(`${API_URL}/survey-pekan/${id}`, { cache: 'no-store' });
+  const result = await normalizeApiResponse<SurveyPekan>(response);
+  return result.data || null;
+}
+
+export async function createSurveyPekan(data: FormData | SurveyPekan): Promise<ApiResponse<SurveyPekan>> {
+  const isFormData = data instanceof FormData;
+  const body = isFormData ? data : JSON.stringify(data);
+
+  const response = await fetch(`${API_URL}/survey-pekan`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body,
+  });
+
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+
+  return normalizeApiResponse<SurveyPekan>(response);
+}
+
+export async function updateSurveyPekan(id: number, data: FormData | Partial<SurveyPekan>): Promise<ApiResponse<SurveyPekan>> {
+  const isFormData = data instanceof FormData;
+  if (isFormData) {
+    (data as FormData).append('_method', 'PUT');
+  }
+
+  const response = await fetch(`${API_URL}/survey-pekan/${id}`, {
+    method: 'POST',
+    headers: getHeaders(isFormData),
+    body: isFormData ? data : JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      if (err?.errors && typeof err.errors === 'object') {
+        const firstField = Object.keys(err.errors)[0];
+        msg = err.errors[firstField]?.[0] || err?.message || msg;
+      } else {
+        msg = err?.message || msg;
+      }
+    } catch { /* body kosong atau non-JSON */ }
+    return { success: false, message: msg };
+  }
+
+  return normalizeApiResponse<SurveyPekan>(response);
+}
+
+export async function deleteSurveyPekan(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/survey-pekan/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}

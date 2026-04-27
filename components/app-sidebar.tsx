@@ -26,6 +26,7 @@ import {
     ClipboardList,
     BarChart3,
     Receipt,
+    SmilePlus,
 } from 'lucide-react';
 import {
     Sidebar,
@@ -180,6 +181,13 @@ const navGroups = [
                 href: '/mediasi',
                 color: 'text-lime-400',
                 activeColor: 'border-lime-400',
+            },
+            {
+                label: 'Survey',
+                icon: SmilePlus,
+                href: '/survey',
+                color: 'text-fuchsia-400',
+                activeColor: 'border-fuchsia-400',
             },
         ],
     },
