@@ -123,6 +123,9 @@ export default function SurveyPekanEdit() {
             const result = await updateSurveyPekan(id, fd);
             if (result.success) {
                 toast({ title: 'Sukses', description: 'Data berhasil diperbarui!' });
+                // Invalidate Next.js Router Cache supaya halaman /survey
+                // memuat data fresh dari API (bukan dari cache RSC).
+                router.refresh();
                 router.push('/survey');
             } else {
                 toast({ variant: 'destructive', title: 'Gagal', description: result.message || 'Terjadi kesalahan.' });
