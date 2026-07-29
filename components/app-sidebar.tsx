@@ -27,6 +27,7 @@ import {
     BarChart3,
     Receipt,
     SmilePlus,
+    ShieldCheck,
 } from 'lucide-react';
 import {
     Sidebar,
@@ -195,6 +196,13 @@ const navGroups = [
                 href: '/survey',
                 color: 'text-fuchsia-400',
                 activeColor: 'border-fuchsia-400',
+            },
+            {
+                label: 'Standar Pelayanan',
+                icon: ShieldCheck,
+                href: '/standar-pelayanan',
+                color: 'text-teal-400',
+                activeColor: 'border-teal-400',
             },
         ],
     },

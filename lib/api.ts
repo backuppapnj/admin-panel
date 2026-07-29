@@ -1985,3 +1985,91 @@ export async function deleteSurveyPekan(id: number): Promise<ApiResponse<null>> 
   });
   return normalizeApiResponse<null>(response);
 }
+
+// ==========================================
+// API STANDAR PELAYANAN
+// ==========================================
+
+export const JENIS_LAYANAN_OPTIONS = [
+  'Pendaftaran Perkara',
+  'Pengambilan Produk Pengadilan',
+  'Layanan Informasi Perkara',
+  'Mediasi',
+  'Bantuan Hukum (Posbakum)',
+  'Layanan e-Court',
+  'Layanan Sidang Keliling / Pelayanan Terpadu',
+  'Legalisasi Dokumen',
+] as const;
+
+export type JenisLayanan = (typeof JENIS_LAYANAN_OPTIONS)[number];
+
+export interface StandarPelayanan {
+  id?: number;
+  jenis_layanan: string;
+  dasar_hukum?: string[];
+  persyaratan?: string[];
+  prosedur?: string[];
+  waktu_penyelesaian?: string;
+  biaya_tarif?: string;
+  produk_layanan?: string[];
+  sarana_prasarana?: string[];
+  penanganan_pengaduan?: string;
+  urutan?: number;
+  published?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function getAllStandarPelayanan(params?: {
+  jenis_layanan?: string;
+  published?: boolean;
+}): Promise<ApiResponse<StandarPelayanan[]>> {
+  let url = `${API_URL}/standar-pelayanan`;
+  const qs: string[] = [];
+  if (params?.jenis_layanan && params.jenis_layanan !== 'all') {
+    qs.push(`jenis_layanan=${encodeURIComponent(params.jenis_layanan)}`);
+  }
+  if (params?.published !== undefined) {
+    qs.push(`published=${params.published ? 'true' : 'false'}`);
+  }
+  if (qs.length) url += '?' + qs.join('&');
+
+  const response = await fetch(url, { cache: 'no-store' });
+  return normalizeApiResponse<StandarPelayanan[]>(response);
+}
+
+export async function getStandarPelayananById(id: number): Promise<ApiResponse<StandarPelayanan>> {
+  const response = await fetch(`${API_URL}/standar-pelayanan/${id}`, { cache: 'no-store' });
+  return normalizeApiResponse<StandarPelayanan>(response);
+}
+
+export async function createStandarPelayanan(
+  data: Omit<StandarPelayanan, 'id' | 'created_at' | 'updated_at'>
+): Promise<ApiResponse<StandarPelayanan>> {
+  const response = await fetch(`${API_URL}/standar-pelayanan`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<StandarPelayanan>(response);
+}
+
+export async function updateStandarPelayanan(
+  id: number,
+  data: Partial<Omit<StandarPelayanan, 'id' | 'created_at' | 'updated_at'>>
+): Promise<ApiResponse<StandarPelayanan>> {
+  const response = await fetch(`${API_URL}/standar-pelayanan/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+  return normalizeApiResponse<StandarPelayanan>(response);
+}
+
+export async function deleteStandarPelayanan(id: number): Promise<ApiResponse<null>> {
+  const response = await fetch(`${API_URL}/standar-pelayanan/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return normalizeApiResponse<null>(response);
+}
